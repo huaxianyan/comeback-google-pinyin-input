@@ -1,0 +1,28 @@
+# User-supplied proprietary APKs and generated output
+*.apk
+*.apks
+*.aab
+original/
+work/
+build/
+dist/
+
+# Signing material
+*.jks
+*.keystore
+*.p12
+signing-info.txt
+
+# Downloaded tools
+/tools/
+
+# Python / editor / OS
+__pycache__/
+*.py[cod]
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

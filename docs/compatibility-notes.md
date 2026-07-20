@@ -42,11 +42,27 @@
 
 ## 手写崩溃
 
-手写路径会调用：
+Android 16 真机日志确认，首次落笔时崩溃并非原生库或页面大小问题，而是 Java 异常：
+
+```text
+java.lang.IllegalArgumentException: Invalid Region.Op - only INTERSECT and DIFFERENCE are allowed
+    at android.graphics.Canvas.clipRect(Canvas.java:874)
+    at ayc.drawPenDown(PG:38)
+```
+
+旧绘制器使用 `Region.Op.REPLACE` 裁剪画布。当前 Android 版本只允许
+`INTERSECT` 和 `DIFFERENCE`。Compatibility v4 将手写及滑行绘制路径中的 6 处
+`REPLACE` 改为 `INTERSECT`，避免首次落笔立即终止输入法进程。由于
+`INTERSECT` 会累积缩小离屏 Canvas 的裁剪区，手写渲染器还需要在每个点绘制前后
+配对调用 `Canvas.save()` / `Canvas.restore()`；否则识别正常但笔迹几乎完全不可见。
+
+手写路径随后会调用：
 
 - `WordRecognizerJNI.initJNICompiledInputToolsNativePointer`
 - `WordRecognizerJNI.startRecognition`
 - `WordRecognizerJNI.addStroke`
 - `WordRecognizerJNI.decode`
 
-原生库中存在会直接终止进程的检查，包括模型读取失败、decoder 为空等。必须获取 Android 16 真机 logcat 才能区分 Java exception、UnsatisfiedLinkError、SIGABRT 和 SIGSEGV。
+已在 Pixel 10 Pro / Android 16（系统报告 4 KiB page size）上验证笔迹显示、
+中文识别和候选上屏均正常，未发现后续 JNI 或模型兼容问题。16 KiB page-size
+设备仍需单独验证。

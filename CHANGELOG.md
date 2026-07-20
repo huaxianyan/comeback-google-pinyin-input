@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.2.0] - 2026-07-20
+
+对应 Compatibility v4 / versionCode `4520316`。
+
+### Fixed
+
+- 根据 Android 16 真机 logcat 定位手写首次落笔崩溃：旧绘制器调用了系统不再允许的 `Region.Op.REPLACE`。
+- 将手写及滑行绘制路径中的 6 处画布裁剪操作改为 `Region.Op.INTERSECT`。
+- 使用成对的 `Canvas.save()` / `Canvas.restore()` 隔离每个笔画点的裁剪区，避免裁剪区持续收缩导致笔迹不可见。
+
+### Changed
+
+- versionCode：4520315 → 4520316。
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat4`。
+
+### Testing
+
+- 已在 Pixel 10 Pro / Android 16 真机验证：手写笔迹显示、中文识别和候选上屏均正常。
+
 ## [0.1.0] - 2026-07-20
 
 对应 Compatibility v3 / versionCode `4520315`。

@@ -6,12 +6,13 @@
 
 ## 当前版本
 
-**Compatibility v3**
+**Compatibility v4**
 
 - 基础版本：Google Pinyin Input `4.5.2.193126728`，`arm64-v8a`
 - 原包名：`com.google.android.inputmethod.pinyin`
 - `targetSdkVersion`：26 → 28
-- `versionCode`：`4520315`
+- `versionCode`：`4520316`
+- 修复 Android 16 上开始手写时因旧版 `Canvas` 裁剪操作导致的崩溃和笔迹不可见问题
 - 适配 Pixel 10 Pro / Android 16 的浅色和深色导航栏
 - 防止输入及候选区刷新时导航栏被旧框架重置为黑色
 - 补全关键组件的 `android:exported` 声明
@@ -19,7 +20,6 @@
 
 ## 已知问题
 
-- 手写输入会导致输入法进程崩溃，尚待通过 logcat/native backtrace 定位。
 - `libhmm_gesture_hwr_zh.so` 是旧式 4 KiB ELF 布局；它在 16 KiB page-size 设备上的兼容性仍需调查。
 - Firebase、账号同步、反馈及旧权限尚未清理。
 - 尚未直接提升到 target SDK 35/36；直接跨越多个 target SDK 会同时启用多代行为变更。
@@ -30,7 +30,7 @@
 patches/
   smali/NavigationBarCompat.smali  导航栏兼容代码
 scripts/
-  apply_patches.py                 对 apktool 输出应用 v3 补丁
+  apply_patches.py                 对 apktool 输出应用 v4 补丁
   build.ps1                        Windows 构建示例
 docs/
   compatibility-notes.md           调查和兼容性记录

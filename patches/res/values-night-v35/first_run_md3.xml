@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="first_run_md3_primary">#FFA8C7FA</color>
+    <color name="first_run_md3_on_primary">#FF062E6F</color>
+    <color name="first_run_md3_primary_container">#FF0842A0</color>
+    <color name="first_run_md3_on_primary_container">#FFD7E3FF</color>
+    <color name="first_run_md3_surface">#FF111318</color>
+    <color name="first_run_md3_surface_container">#FF1D2024</color>
+    <color name="first_run_md3_on_surface">#FFE2E2E9</color>
+    <color name="first_run_md3_on_surface_variant">#FFC4C6D0</color>
+    <color name="first_run_md3_outline">#FF8E9099</color>
+
+    <style name="AppThemeSelector.NoTitle" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@color/first_run_md3_surface</item>
+        <item name="android:navigationBarColor">@color/first_run_md3_surface</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+</resources>

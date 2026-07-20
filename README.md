@@ -6,12 +6,15 @@
 
 ## 当前版本
 
-**Compatibility v4**
+**Compatibility v5**
 
 - 基础版本：Google Pinyin Input `4.5.2.193126728`，`arm64-v8a`
 - 原包名：`com.google.android.inputmethod.pinyin`
 - `targetSdkVersion`：26 → 28
-- `versionCode`：`4520316`
+- `versionCode`：`4520317`
+- 首次使用引导更新为适配明暗主题的 Material Design 3 风格
+- 首次使用流程移除匿名使用情况选择页，完成或返回时直接关闭
+- 修复候选与标点列表滑动结束后误选内容
 - 修复 Android 16 上开始手写时因旧版 `Canvas` 裁剪操作导致的崩溃和笔迹不可见问题
 - 适配 Pixel 10 Pro / Android 16 的浅色和深色导航栏
 - 防止输入及候选区刷新时导航栏被旧框架重置为黑色
@@ -30,7 +33,7 @@
 patches/
   smali/NavigationBarCompat.smali  导航栏兼容代码
 scripts/
-  apply_patches.py                 对 apktool 输出应用 v4 补丁
+  apply_patches.py                 对 apktool 输出应用 v5 补丁
   build.ps1                        Windows 构建示例
 docs/
   compatibility-notes.md           调查和兼容性记录

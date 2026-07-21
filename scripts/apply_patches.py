@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply the Android 16 compatibility v13 patch to apktool 2.12.1 output.
+"""Apply the Android 16 compatibility v18 patch to apktool 2.12.1 output.
 
 This script intentionally targets the unmodified Google Pinyin Input
 4.5.2.193126728 arm64-v8a APK. It aborts instead of guessing when an expected
@@ -46,8 +46,8 @@ def apply(decoded: Path) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520325\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat13",
+        "versionInfo:\n  versionCode: 4520330\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat18",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -388,27 +388,47 @@ def apply(decoded: Path) -> None:
         "    .line 100",
     )
 
-    # The old ViewPager requires either a fling or more than half-page travel.
-    # A slow swipe therefore feels unresponsive. Use an 8 dp commit distance
-    # and preserve the velocity sign solely to choose page direction.
-    pager = decoded / "smali/lk.smali"
+    # Remove obsolete network-facing features and their settings entry points.
     replace_once(
-        pager,
-        "    const/high16 v1, 0x41c80000    # 25.0f\n\n"
-        "    mul-float/2addr v1, v0",
-        "    const/high16 v1, 0x41000000    # 8.0f\n\n"
-        "    mul-float/2addr v1, v0",
+        decoded / "res/xml/setting_other.xml",
+        '    <com.google.android.apps.inputmethod.libs.framework.preference.widget.'
+        'CheckBoxPreferenceWithConfirmDialog android:persistent="true" '
+        'android:title="@string/setting_user_metrics_title" '
+        'android:key="@string/pref_key_enable_user_metrics" '
+        'android:dialogTitle="@string/setting_user_metrics_feedback_title" '
+        'android:dialogMessage="@string/setting_user_metrics_feedback_message" />\n',
+        "",
     )
     replace_once(
-        pager,
-        "    iget v6, p0, Llk;->n:I\n\n"
-        "    if-le v0, v6, :cond_f\n\n"
-        "    invoke-static {v2}, Ljava/lang/Math;->abs(I)I\n\n"
-        "    move-result v0\n\n"
-        "    iget v6, p0, Llk;->l:I\n\n"
-        "    if-le v0, v6, :cond_f",
-        "    iget v6, p0, Llk;->n:I\n\n"
-        "    if-le v0, v6, :cond_f",
+        decoded / "res/menu/menu_settings.xml",
+        '    <item android:id="@id/action_send_feedback" android:orderInCategory="2" '
+        'android:title="@string/setting_send_feedback_title" '
+        'android:showAsAction="never" />\n',
+        "",
+    )
+
+    # PinyinApp's Laym instance registers Clearcut/Primes processors, daily
+    # pings and keyboard event collectors. Without it, IMetrics remains usable
+    # internally but no upload processors are attached.
+    replace_once(
+        decoded / "smali/com/google/android/apps/inputmethod/pinyin/PinyinApp.smali",
+        "    .line 16\n"
+        "    :cond_1\n"
+        "    iget-object v0, p0, Lcom/google/android/apps/inputmethod/pinyin/"
+        "PinyinApp;->a:Laym;\n\n"
+        "    if-nez v0, :cond_2\n\n"
+        "    .line 17\n"
+        "    new-instance v0, Laym;\n\n"
+        "    invoke-direct {v0, p0}, Laym;-><init>(Landroid/app/Application;)V\n\n"
+        "    iput-object v0, p0, Lcom/google/android/apps/inputmethod/pinyin/"
+        "PinyinApp;->a:Laym;\n\n"
+        "    .line 18\n"
+        "    :cond_2",
+        "    .line 16\n"
+        "    :cond_1\n"
+        "    # Compatibility build: Clearcut/Primes collection is disabled.\n"
+        "    .line 18\n"
+        "    :cond_2",
     )
 
     # Use a distinct application ID so the compatibility build can coexist
@@ -434,6 +454,20 @@ def apply(decoded: Path) -> None:
         '    const-string v2, "com.google.android.inputmethod.pinyin"',
         '    const-string v2, "com.google.android.inputmethod.pinyin.compat"',
     )
+
+    for obsolete_component in (
+        '        <activity android:exported="false" android:name="com.google.android.apps.inputmethod.pinyin.preference.PinyinUserFeedbackActivity"/>\n',
+        '        <activity android:excludeFromRecents="true" android:name="com.google.userfeedback.android.api.UserFeedbackActivity" android:theme="@android:style/Theme.Dialog"/>\n',
+        '        <activity android:excludeFromRecents="true" android:name="com.google.userfeedback.android.api.PreviewActivity" android:theme="@android:style/Theme.Dialog"/>\n',
+        '        <activity android:excludeFromRecents="true" android:name="com.google.userfeedback.android.api.ShowTextActivity" android:theme="@android:style/Theme.Dialog"/>\n',
+        '        <activity android:excludeFromRecents="true" android:name="com.google.userfeedback.android.api.ShowStringListActivity" android:theme="@android:style/Theme.Dialog"/>\n',
+        '        <service android:name="com.google.userfeedback.android.api.SendUserFeedbackService"/>\n',
+        '        <receiver android:exported="true" android:name="com.google.firebase.iid.FirebaseInstanceIdReceiver" android:permission="com.google.android.c2dm.permission.SEND">\n            <intent-filter>\n                <action android:name="com.google.android.c2dm.intent.RECEIVE"/>\n                <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>\n            </intent-filter>\n        </receiver>\n',
+        '        <receiver android:exported="false" android:name="com.google.firebase.iid.FirebaseInstanceIdInternalReceiver"/>\n',
+        '        <service android:exported="true" android:name="com.google.firebase.iid.FirebaseInstanceIdService">\n            <intent-filter android:priority="-500">\n                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>\n            </intent-filter>\n        </service>\n',
+        '        <service android:exported="true" android:name="com.firebase.jobdispatcher.GooglePlayReceiver" android:permission="com.google.android.gms.permission.BIND_NETWORK_TASK_SERVICE">\n            <intent-filter>\n                <action android:name="com.google.android.gms.gcm.ACTION_TASK_READY"/>\n            </intent-filter>\n        </service>\n',
+    ):
+        replace_once(manifest, obsolete_component, "")
 
     replace_once(
         manifest,
@@ -516,7 +550,7 @@ def apply(decoded: Path) -> None:
         helper_dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(helper_src, helper_dst)
 
-    print(f"Applied compatibility v13 patches to {decoded}")
+    print(f"Applied compatibility v18 patches to {decoded}")
 
 
 def main() -> None:

@@ -1,5 +1,48 @@
 # Changelog
 
+## [0.13.0] - 2026-07-21
+
+对应 Compatibility v18 / versionCode `4520330`。
+
+### Removed
+
+- 移除设置“其他”页面中的“发送使用情况统计信息”开关。
+- 移除设置菜单中的“发送反馈”入口，以及 Manifest 中的拼音反馈 Activity、Google User Feedback Activities 和上传 Service。
+- 移除 Manifest 中的 Firebase Instance ID Receivers、Service 和 Firebase JobDispatcher Receiver，阻止失效的注册、广播及后台任务入口被系统启动。
+- 停止在 `PinyinApp` 中创建 `Laym`，不再注册 Clearcut/Primes 的每日 ping、IME 事件和键盘事件统计处理器，也不再创建 Clearcut 上传适配器。
+
+### Preserved
+
+- 保留本地 `IMetrics` 接口供旧框架内部计时和状态逻辑使用，但不挂接任何网络上传处理器。
+- 用户词典同步和在线词典更新暂未在本次清理范围内。
+- 横向符号/表情分页继续保持 v17 已恢复的原版逻辑。
+
+### Changed
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat18`。
+
+### Testing
+
+- APK 已重建、签名并覆盖安装；Manifest 和设置 XML 中已无 Firebase、User Feedback、使用统计及发送反馈入口。
+
+## [0.12.0] - 2026-07-21
+
+对应 Compatibility v17 / versionCode `4520329`。
+
+### Reverted
+
+- 完整回滚此前所有针对全键盘符号、标点、表情横向分页的修改，包括早期将翻页提交距离从 25 dp 降至 8 dp、移除最低 fling 速度条件，以及 v14-v16 的 touch slop、方向、分页状态桥和强制翻页实验。
+- 横向分页器 `lk`、`mq` 及 `PageableSoftKeyListHolderView` 恢复原版 APK 的触摸阈值、释放判定、动画、方向和事件处理。
+- 保留已经验证正常的九宫格左侧纵向列表修复、高刷新率请求、Android 16 手写及导航栏兼容补丁。
+
+### Changed
+
+- 为允许覆盖安装已经发布到手机的高 versionCode 测试版，回滚构建使用 versionCode `4520329` 和 versionName `4.5.2.193126728-arm64-v8a-a16compat17`。除横向分页代码恢复原版外，其余功能代码以已验证的 v13 为基线。
+
+### Testing
+
+- 已从 v13 APK 重新解码并重建，签名验证通过，随后成功覆盖安装到 Pixel 10 Pro。
+
 ## [0.11.0] - 2026-07-21
 
 对应 Compatibility v13 / versionCode `4520325`。

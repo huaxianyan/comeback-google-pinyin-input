@@ -6,17 +6,18 @@
 
 ## 当前版本
 
-**Compatibility v19**
+**Compatibility v20**
 
 - 基础版本：Google Pinyin Input `4.5.2.193126728`，`arm64-v8a`
 - 原包名：`com.google.android.inputmethod.pinyin`
 - 兼容版包名：`com.google.android.inputmethod.pinyin.compat`，可与原版共存
 - 应用显示名称保持与原版一致
 - `targetSdkVersion`：26 → 28
-- `versionCode`：`4520331`
+- `versionCode`：`4520332`
 - 修复九宫格左侧候选/标点列表滑动后误上屏
 - 清理失效的 Clearcut/Primes 统计、Firebase 后台组件和反馈上传入口
 - 移除已失效的在线系统词典更新入口、任务注册和权限功能声明
+- 增加用户词库滚动备份、启动恢复和原生加载失败后的备份重试，降低词库意外清空风险
 - 全键盘符号/表情横向分页保持原版逻辑，并请求 120 Hz 输入法渲染
 - 首次使用引导更新为适配明暗主题的 Material Design 3 风格
 - 首次使用流程移除匿名使用情况选择页，完成或返回时直接关闭
@@ -39,7 +40,7 @@
 patches/
   smali/NavigationBarCompat.smali  导航栏兼容代码
 scripts/
-  apply_patches.py                 对 apktool 输出应用 v19 补丁
+  apply_patches.py                 对 apktool 输出应用 v20 补丁
   build.ps1                        Windows 构建示例
 docs/
   compatibility-notes.md           调查和兼容性记录

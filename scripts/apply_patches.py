@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply the Android 16 compatibility v19 patch to apktool 2.12.1 output.
+"""Apply the Android 16 compatibility v20 patch to apktool 2.12.1 output.
 
 This script intentionally targets the unmodified Google Pinyin Input
 4.5.2.193126728 arm64-v8a APK. It aborts instead of guessing when an expected
@@ -46,8 +46,8 @@ def apply(decoded: Path) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520331\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat19",
+        "versionInfo:\n  versionCode: 4520332\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat20",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -519,6 +519,118 @@ def apply(decoded: Path) -> None:
         "",
     )
 
+    # Recover interrupted dictionary rotations before enrollment. If native
+    # loading fails, retry once with the previous known-good rolling backup.
+    engine_factory = decoded / (
+        "smali/com/google/android/apps/inputmethod/libs/hmm/"
+        "AbstractHmmEngineFactory.smali"
+    )
+    replace_once(
+        engine_factory,
+        ".method public final enrollMutableDictionary(Landroid/content/Context;"
+        "Ljava/lang/String;II)V\n"
+        "    .locals 10\n\n"
+        "    .prologue\n"
+        "    .line 289\n"
+        "    invoke-virtual {p0}, Lcom/google/android/apps/inputmethod/libs/hmm/"
+        "AbstractHmmEngineFactory;->getDataManager()Lcom/google/android/apps/"
+        "inputmethod/libs/hmm/DataManager;",
+        ".method public final enrollMutableDictionary(Landroid/content/Context;"
+        "Ljava/lang/String;II)V\n"
+        "    .locals 10\n\n"
+        "    .prologue\n"
+        "    invoke-static {p1, p2}, Lcom/google/android/inputmethod/pinyin/"
+        "DictionaryRecoveryCompat;->prepareForLoad(Landroid/content/Context;"
+        "Ljava/lang/String;)V\n\n"
+        "    .line 289\n"
+        "    invoke-virtual {p0}, Lcom/google/android/apps/inputmethod/libs/hmm/"
+        "AbstractHmmEngineFactory;->getDataManager()Lcom/google/android/apps/"
+        "inputmethod/libs/hmm/DataManager;",
+    )
+    replace_once(
+        engine_factory,
+        "    .line 299\n"
+        "    :try_start_4\n"
+        "    invoke-virtual {v7}, Ljava/io/FileInputStream;->close()V\n"
+        "    :try_end_4\n"
+        "    .catch Ljava/io/IOException; {:try_start_4 .. :try_end_4} :catch_0\n\n"
+        "    .line 303\n"
+        "    :cond_2",
+        "    .line 299\n"
+        "    :try_start_4\n"
+        "    invoke-virtual {v7}, Ljava/io/FileInputStream;->close()V\n"
+        "    :try_end_4\n"
+        "    .catch Ljava/io/IOException; {:try_start_4 .. :try_end_4} :catch_0\n\n"
+        "    invoke-static {p1, p2}, Lcom/google/android/inputmethod/pinyin/"
+        "DictionaryRecoveryCompat;->recoverAfterLoadFailure(Landroid/content/"
+        "Context;Ljava/lang/String;)Z\n\n"
+        "    move-result v1\n\n"
+        "    if-eqz v1, :cond_2\n\n"
+        "    invoke-virtual {p0, p1, p2, p3, p4}, Lcom/google/android/apps/"
+        "inputmethod/libs/hmm/AbstractHmmEngineFactory;->enrollMutableDictionary("
+        "Landroid/content/Context;Ljava/lang/String;II)V\n\n"
+        "    return-void\n\n"
+        "    .line 303\n"
+        "    :cond_2",
+    )
+    replace_once(
+        engine_factory,
+        "    :catch_0\n"
+        "    move-exception v1\n\n"
+        "    goto :goto_1\n"
+        ".end method",
+        "    :catch_0\n"
+        "    move-exception v1\n\n"
+        "    invoke-static {p1, p2}, Lcom/google/android/inputmethod/pinyin/"
+        "DictionaryRecoveryCompat;->recoverAfterLoadFailure(Landroid/content/"
+        "Context;Ljava/lang/String;)Z\n\n"
+        "    move-result v1\n\n"
+        "    if-eqz v1, :goto_1\n\n"
+        "    invoke-virtual {p0, p1, p2, p3, p4}, Lcom/google/android/apps/"
+        "inputmethod/libs/hmm/AbstractHmmEngineFactory;->enrollMutableDictionary("
+        "Landroid/content/Context;Ljava/lang/String;II)V\n\n"
+        "    return-void\n"
+        ".end method",
+    )
+
+    # Keep one rolling backup after a successful atomic file rotation instead
+    # of immediately deleting the only previous known-good dictionary.
+    dictionary_accessor = decoded / (
+        "smali/com/google/android/apps/inputmethod/libs/hmm/DictionaryAccessor.smali"
+    )
+    replace_once(
+        dictionary_accessor,
+        "    .line 102\n"
+        "    :cond_8\n"
+        "    :try_start_3\n"
+        "    invoke-virtual {v4}, Ljava/io/File;->delete()Z\n\n"
+        "    move-result v0\n\n"
+        "    if-nez v0, :cond_9\n\n"
+        "    .line 103\n"
+        "    const-string v0, \"error deleting file: %s\"\n\n"
+        "    const/4 v5, 0x1\n\n"
+        "    new-array v5, v5, [Ljava/lang/Object;\n\n"
+        "    const/4 v6, 0x0\n\n"
+        "    invoke-virtual {v4}, Ljava/io/File;->getAbsolutePath()Ljava/lang/String;\n\n"
+        "    move-result-object v7\n\n"
+        "    aput-object v7, v5, v6\n\n"
+        "    invoke-static {v0, v5}, Lalg;->b(Ljava/lang/String;[Ljava/lang/Object;)V\n"
+        "    :try_end_3\n"
+        "    .catchall {:try_start_3 .. :try_end_3} :catchall_0\n\n"
+        "    .line 104\n"
+        "    :cond_9",
+        "    .line 102\n"
+        "    :cond_8\n"
+        "    :try_start_3\n"
+        "    # Compatibility build: retain the previous known-good dictionary as _bak.\n"
+        "    invoke-virtual {v4}, Ljava/io/File;->exists()Z\n\n"
+        "    move-result v0\n"
+        "    :try_end_3\n"
+        "    .catchall {:try_start_3 .. :try_end_3} :catchall_0\n\n"
+        "    .line 104\n"
+        "    :cond_9",
+    )
+
     # Use a distinct application ID so the compatibility build can coexist
     # with the official Google-signed package for side-by-side comparison.
     manifest = decoded / "AndroidManifest.xml"
@@ -629,6 +741,7 @@ def apply(decoded: Path) -> None:
         "NavigationBarCompat.smali",
         "FrameRateCompat.smali",
         "ScrollTouchCompat.smali",
+        "DictionaryRecoveryCompat.smali",
     ):
         helper_src = ROOT / "patches/smali" / helper_name
         helper_dst = decoded / "smali/com/google/android/inputmethod/pinyin" / helper_name
@@ -637,7 +750,7 @@ def apply(decoded: Path) -> None:
         helper_dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(helper_src, helper_dst)
 
-    print(f"Applied compatibility v19 patches to {decoded}")
+    print(f"Applied compatibility v20 patches to {decoded}")
 
 
 def main() -> None:

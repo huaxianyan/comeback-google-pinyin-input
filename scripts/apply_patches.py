@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply the Android 16 compatibility v5 patch to apktool 2.12.1 output.
+"""Apply the Android 16 compatibility v13 patch to apktool 2.12.1 output.
 
 This script intentionally targets the unmodified Google Pinyin Input
 4.5.2.193126728 arm64-v8a APK. It aborts instead of guessing when an expected
@@ -46,8 +46,8 @@ def apply(decoded: Path) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520317\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat5",
+        "versionInfo:\n  versionCode: 4520325\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat13",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -244,13 +244,22 @@ def apply(decoded: Path) -> None:
             "    invoke-virtual {v0}, Lapy;->finishAndRemoveTask()V",
         )
 
-    # The old scroll containers changed ACTION_UP to ACTION_CANCEL only after
-    # dispatching it. Android 16 therefore clicked the item under the finger at
-    # the end of a candidate/punctuation scroll. Cancel before handling UP.
+    # The left list scrolls correctly, but its original starting SoftKey is
+    # selected on release. Detect actual pointer displacement directly in the
+    # list (without GestureDetector heuristics) and replace UP with CANCEL.
     scroll_holder = decoded / "smali/awo.smali"
     replace_once(
         scroll_holder,
-        """    .line 14
+        ".field private d:I\n",
+        ".field private d:I\n\n"
+        ".field private compatDownScrollY:I\n\n"
+        ".field private compatMoved:Z\n",
+    )
+    old_touch = """.method public onTouchEvent(Landroid/view/MotionEvent;)Z
+    .locals 3
+
+    .prologue
+    .line 14
     invoke-super {p0, p1}, Landroid/widget/ScrollView;->onTouchEvent(Landroid/view/MotionEvent;)Z
 
     move-result v0
@@ -282,78 +291,150 @@ def apply(decoded: Path) -> None:
 
     .line 18
     :cond_0
-    return v0""",
-        """    invoke-virtual {p1}, Landroid/view/MotionEvent;->getActionMasked()I
+    return v0
+.end method"""
+    new_touch = """.method public dispatchTouchEvent(Landroid/view/MotionEvent;)Z
+    .locals 4
+
+    invoke-virtual {p1}, Landroid/view/MotionEvent;->getActionMasked()I
+
+    move-result v1
+
+    if-nez v1, :dispatch
+
+    invoke-virtual {p0}, Lawo;->getScrollY()I
+
+    move-result v2
+
+    iput v2, p0, Lawo;->compatDownScrollY:I
+
+    const/4 v2, 0x0
+
+    iput-boolean v2, p0, Lawo;->compatMoved:Z
+
+    invoke-static {}, Lcom/google/android/inputmethod/pinyin/ScrollTouchCompat;->reset()V
+
+    :dispatch
+    invoke-super {p0, p1}, Landroid/widget/ScrollView;->dispatchTouchEvent(Landroid/view/MotionEvent;)Z
 
     move-result v0
 
-    const/4 v1, 0x1
+    const/4 v2, 0x2
 
-    if-ne v0, v1, :dispatch
+    if-ne v1, v2, :done
 
-    iget-object v0, p0, Lawo;->a:Lawp;
+    iget-boolean v2, p0, Lawo;->compatMoved:Z
 
-    iget-boolean v0, v0, Lawp;->a:Z
+    if-nez v2, :done
 
-    if-eqz v0, :dispatch
+    invoke-virtual {p0}, Lawo;->getScrollY()I
 
-    const/4 v0, 0x3
+    move-result v2
 
-    invoke-virtual {p1, v0}, Landroid/view/MotionEvent;->setAction(I)V
+    iget v3, p0, Lawo;->compatDownScrollY:I
 
-    :dispatch
+    if-ne v2, v3, :mark_moved
+
+    goto :done
+
+    :mark_moved
+    const/4 v2, 0x1
+
+    iput-boolean v2, p0, Lawo;->compatMoved:Z
+
+    invoke-static {}, Lcom/google/android/inputmethod/pinyin/ScrollTouchCompat;->markScrolling()V
+
+    :done
+    return v0
+.end method
+
+.method public onTouchEvent(Landroid/view/MotionEvent;)Z
+    .locals 1
+
     invoke-super {p0, p1}, Landroid/widget/ScrollView;->onTouchEvent(Landroid/view/MotionEvent;)Z
 
     move-result v0
 
-    iget-object v1, p0, Lawo;->a:Landroid/view/GestureDetector;
+    return v0
+.end method"""
+    replace_once(scroll_holder, old_touch, new_touch)
 
-    invoke-virtual {v1, p1}, Landroid/view/GestureDetector;->onTouchEvent(Landroid/view/MotionEvent;)Z
+    # Keep pageable holders' original order: the pager must see ACTION_UP before
+    # the click-cancellation helper mutates it. v5 reversed this order and made
+    # every genuine page swipe look like ACTION_CANCEL, forcing users to drag
+    # beyond half a page before the page could change.
 
-    return v0""",
+    # Let the ScrollView receive the original UP first so it can calculate
+    # fling velocity. Only afterwards cancel the outer copy before the custom
+    # keyboard handler consumes it.
+    soft_keyboard = decoded / (
+        "smali/com/google/android/apps/inputmethod/libs/framework/keyboard/"
+        "SoftKeyboardView.smali"
+    )
+    replace_once(
+        soft_keyboard,
+        "    .line 99\n"
+        "    :cond_4\n"
+        "    invoke-super {p0, p1}, Landroid/widget/FrameLayout;->dispatchTouchEvent("
+        "Landroid/view/MotionEvent;)Z\n\n"
+        "    .line 100",
+        "    .line 99\n"
+        "    :cond_4\n"
+        "    invoke-super {p0, p1}, Landroid/widget/FrameLayout;->dispatchTouchEvent("
+        "Landroid/view/MotionEvent;)Z\n\n"
+        "    # Preserve ScrollView UP/fling, then cancel only the outer key event.\n"
+        "    invoke-static {p1}, Lcom/google/android/inputmethod/pinyin/"
+        "ScrollTouchCompat;->cancelOuterRelease(Landroid/view/MotionEvent;)V\n\n"
+        "    .line 100",
     )
 
-    for relative, class_name, metrics_line in (
-        (
-            "smali/com/google/android/apps/inputmethod/libs/framework/keyboard/widget/"
-            "PageableCandidatesHolderView.smali",
-            "PageableCandidatesHolderView",
-            72,
-        ),
-        (
-            "smali/com/google/android/apps/inputmethod/libs/framework/keyboard/widget/"
-            "PageableSoftKeyListHolderView.smali",
-            "PageableSoftKeyListHolderView",
-            52,
-        ),
-    ):
-        path = decoded / relative
-        old = (
-            "    invoke-super {p0, p1}, Llk;->onTouchEvent(Landroid/view/MotionEvent;)Z\n\n"
-            "    move-result v0\n\n"
-            f"    .line {metrics_line}\n"
-            f"    iget-object v1, p0, Lcom/google/android/apps/inputmethod/libs/framework/keyboard/widget/{class_name};->a:Laws;\n\n"
-            "    invoke-virtual {v1, p1}, Laws;->a(Landroid/view/MotionEvent;)V"
-        )
-        new = (
-            "    invoke-virtual {p1}, Landroid/view/MotionEvent;->getActionMasked()I\n\n"
-            "    move-result v0\n\n"
-            "    const/4 v1, 0x1\n\n"
-            "    if-ne v0, v1, :normal_dispatch\n\n"
-            f"    iget-object v1, p0, Lcom/google/android/apps/inputmethod/libs/framework/keyboard/widget/{class_name};->a:Laws;\n\n"
-            "    invoke-virtual {v1, p1}, Laws;->a(Landroid/view/MotionEvent;)V\n\n"
-            "    invoke-super {p0, p1}, Llk;->onTouchEvent(Landroid/view/MotionEvent;)Z\n\n"
-            "    move-result v0\n\n"
-            "    return v0\n\n"
-            "    :normal_dispatch\n"
-            "    invoke-super {p0, p1}, Llk;->onTouchEvent(Landroid/view/MotionEvent;)Z\n\n"
-            "    move-result v0\n\n"
-            f"    iget-object v1, p0, Lcom/google/android/apps/inputmethod/libs/framework/keyboard/widget/{class_name};->a:Laws;\n\n"
-            "    invoke-virtual {v1, p1}, Laws;->a(Landroid/view/MotionEvent;)V"
-        )
-        replace_once(path, old, new)
+    # The old ViewPager requires either a fling or more than half-page travel.
+    # A slow swipe therefore feels unresponsive. Use an 8 dp commit distance
+    # and preserve the velocity sign solely to choose page direction.
+    pager = decoded / "smali/lk.smali"
+    replace_once(
+        pager,
+        "    const/high16 v1, 0x41c80000    # 25.0f\n\n"
+        "    mul-float/2addr v1, v0",
+        "    const/high16 v1, 0x41000000    # 8.0f\n\n"
+        "    mul-float/2addr v1, v0",
+    )
+    replace_once(
+        pager,
+        "    iget v6, p0, Llk;->n:I\n\n"
+        "    if-le v0, v6, :cond_f\n\n"
+        "    invoke-static {v2}, Ljava/lang/Math;->abs(I)I\n\n"
+        "    move-result v0\n\n"
+        "    iget v6, p0, Llk;->l:I\n\n"
+        "    if-le v0, v6, :cond_f",
+        "    iget v6, p0, Llk;->n:I\n\n"
+        "    if-le v0, v6, :cond_f",
+    )
 
+    # Use a distinct application ID so the compatibility build can coexist
+    # with the official Google-signed package for side-by-side comparison.
     manifest = decoded / "AndroidManifest.xml"
+    replace_once(
+        manifest,
+        'package="com.google.android.inputmethod.pinyin"',
+        'package="com.google.android.inputmethod.pinyin.compat"',
+    )
+    replace_once(
+        manifest,
+        'android:authorities="com.google.android.inputmethod.pinyin.user_dictionary"',
+        'android:authorities="com.google.android.inputmethod.pinyin.compat.user_dictionary"',
+    )
+    replace_once(
+        decoded / "res/values/strings.xml",
+        '<string name="user_dictionary_authority">com.google.android.inputmethod.pinyin.user_dictionary</string>',
+        '<string name="user_dictionary_authority">com.google.android.inputmethod.pinyin.compat.user_dictionary</string>',
+    )
+    replace_once(
+        decoded / "smali/ayn.smali",
+        '    const-string v2, "com.google.android.inputmethod.pinyin"',
+        '    const-string v2, "com.google.android.inputmethod.pinyin.compat"',
+    )
+
     replace_once(
         manifest,
         '<service android:directBootAware="true" android:label="@string/ime_name_ref" '
@@ -398,6 +479,10 @@ def apply(decoded: Path) -> None:
         "    invoke-static {p0}, Lcom/google/android/inputmethod/pinyin/NavigationBarCompat;"
         "->apply(Lcom/google/android/apps/inputmethod/libs/framework/core/"
         "GoogleInputMethodService;)V\n\n"
+        "    # Ask modern variable-refresh displays to animate the IME at 120 Hz.\n"
+        "    invoke-static {p0}, Lcom/google/android/inputmethod/pinyin/FrameRateCompat;"
+        "->apply(Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "GoogleInputMethodService;)V\n\n"
         "    .line 77",
     )
 
@@ -419,14 +504,19 @@ def apply(decoded: Path) -> None:
         "    goto/16 :goto_0",
     )
 
-    helper_src = ROOT / "patches/smali/NavigationBarCompat.smali"
-    helper_dst = decoded / "smali/com/google/android/inputmethod/pinyin/NavigationBarCompat.smali"
-    if helper_dst.exists():
-        raise RuntimeError(f"Refusing to overwrite existing helper: {helper_dst}")
-    helper_dst.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(helper_src, helper_dst)
+    for helper_name in (
+        "NavigationBarCompat.smali",
+        "FrameRateCompat.smali",
+        "ScrollTouchCompat.smali",
+    ):
+        helper_src = ROOT / "patches/smali" / helper_name
+        helper_dst = decoded / "smali/com/google/android/inputmethod/pinyin" / helper_name
+        if helper_dst.exists():
+            raise RuntimeError(f"Refusing to overwrite existing helper: {helper_dst}")
+        helper_dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(helper_src, helper_dst)
 
-    print(f"Applied compatibility v5 patches to {decoded}")
+    print(f"Applied compatibility v13 patches to {decoded}")
 
 
 def main() -> None:

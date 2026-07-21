@@ -1,5 +1,144 @@
 # Changelog
 
+## [0.11.0] - 2026-07-21
+
+对应 Compatibility v13 / versionCode `4520325`。
+
+### Fixed
+
+- 修复静止点击被错误归类为滚动：不再依据子 View 事件坐标位移，因为现代 Android 的事件副本和坐标转换会让同一次静止触摸在不同分派阶段出现较大的局部坐标差。
+- 改为在内部 `ScrollView` 完成每个 `MOVE` 后比较实际 `scrollY`。只有列表内容确实移动至少 1 px 才设置滚动状态；静止点击不会取消，快速连续滑动也不再依赖不稳定的事件坐标。
+- 保留 v12 的释放时序，内部列表继续先收到原始 `ACTION_UP`，不影响惯性滚动。
+
+### Changed
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat13`。
+
+### Testing
+
+- APK 已重建并签名；安装时手机已从 ADB 断开，等待重新连接后安装。
+
+## [0.10.0] - 2026-07-21
+
+对应 Compatibility v12 / versionCode `4520324`。
+
+### Fixed
+
+- 修复 v11 中普通点击也被取消的问题：现在外层在每次新的 `ACTION_DOWN` 时无条件清除上一手势的滚动状态。
+- 恢复滚动惯性：不再提前修改送往内部 `ScrollView` 的释放事件。列表先接收原始 `ACTION_UP` 并计算 fling，随后才把外层自定义按键管线即将处理的事件改为 `ACTION_CANCEL`。
+- 避免快速连续滑动时因前一手势状态残留而随机输入符号。
+
+### Changed
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat12`。
+
+### Testing
+
+- 已覆盖安装独立包名版本；等待分别复测单击、慢速拖动和快速甩动。
+
+## [0.9.0] - 2026-07-21
+
+对应 Compatibility v11 / versionCode `4520323`。
+
+### Fixed
+
+- 原版在 Android 16 上可复现同样问题，确认这是旧触摸实现与新系统事件分派之间的兼容问题，而非此前补丁单独引入。
+- 旧实现假设在内部 `ScrollView` 修改 `MotionEvent` 后，外层 `SoftKeyboardView` 会看到同一个已修改对象。现代 Android 向子 View 分派经过坐标转换的事件副本，内部副本改为 `ACTION_CANCEL` 后，外层自定义按键管线仍会收到原始 `ACTION_UP`，因而选中滑动起点。
+- 新增显式滚动状态桥：内部列表检测到实际纵向移动后记录状态；外层 `SoftKeyboardView` 在处理自己的原始释放事件前读取该状态并将其改为 `ACTION_CANCEL`。
+
+### Changed
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat11`。
+
+### Testing
+
+- 已覆盖安装独立包名版本；官方原版继续保留，可直接切换对比。
+
+## [0.8.0] - 2026-07-21
+
+对应 Compatibility v10 / versionCode `4520322`。
+
+### Changed
+
+- 兼容版应用 ID 改为 `com.google.android.inputmethod.pinyin.compat`，可与官方原版 `com.google.android.inputmethod.pinyin` 并存，方便同机对比触摸行为。
+- 同步隔离用户词典 Provider authority，避免与原版冲突。
+- 应用中文名及其他语言显示名称保持原样，不添加“改版”或其他后缀。
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat10`。
+
+### Testing
+
+- 已在 Pixel 10 Pro 成功安装独立包名版本，并确认系统同时识别两个不同的输入法组件。
+
+## [0.7.0] - 2026-07-21
+
+对应 Compatibility v9 / versionCode `4520321`。
+
+### Fixed
+
+- 根据真机现象修正问题定义：列表本身能够滚动，误选固定发生在松手时，并选择滑动起点处原先按住的候选或标点。
+- 不再依赖 `GestureDetector` 的方向判定或外层布局坐标。滚动容器 `awo` 直接记录本次手势的起始 Y 坐标；只要纵向总位移超过系统 touch slop，就在释放进入子按键和外层输入管线前把 `ACTION_UP` 改为 `ACTION_CANCEL`。
+- 普通静止点击仍保留原始 `ACTION_UP`。
+
+### Changed
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat9`。
+
+### Testing
+
+- 已重建、签名并覆盖安装到 Pixel 10 Pro；等待九宫格左侧列表真机复测。
+
+## [0.6.0] - 2026-07-21
+
+对应 Compatibility v8 / versionCode `4520320`。
+
+### Fixed
+
+- 确认九宫格左侧误上屏发生在 `ACTION_DOWN`：`TappingActionHelper` 会在手指按下时立即建立并执行 `PRESS` 动作，因此在 `ACTION_UP` 阶段发送取消事件已经太晚。
+- 对九宫格左侧面板改用延迟判定：标准 View 事件仍实时交给 `ScrollView`；自定义按键处理管线暂不接收 `DOWN/MOVE`。松手时若发生纵向移动则不生成按键事件；若没有移动则补发完整的 `DOWN/UP` 点击序列。
+
+### Changed
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat8`。
+
+### Testing
+
+- 已重建、签名并覆盖安装到 Pixel 10 Pro；等待九宫格左侧候选及标点列表真机复测。
+
+## [0.5.0] - 2026-07-21
+
+对应 Compatibility v7 / versionCode `4520319`。
+
+### Fixed
+
+- 在 `SoftKeyboardView` 的外层自定义触摸管线增加仅针对九宫格左侧面板的纵向滑动保护。该输入法在标准 View 分派之后还会再次处理同一个事件，解释了仅在内部 `ScrollView` 取消释放仍会上屏的问题。
+- 分页器的翻页提交距离从 25 dp 降至 8 dp，并取消“位移达标后还必须同时达到最低 fling 速度”的限制，使慢速短距离滑动也能翻页。
+
+### Changed
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat7`。
+
+### Testing
+
+- 已重建、签名并覆盖安装到 Pixel 10 Pro；等待真机交互复测。
+
+## [0.4.0] - 2026-07-21
+
+对应 Compatibility v6 / versionCode `4520318`。
+
+### Fixed
+
+- 九宫格左侧候选/标点滚动容器现在从完整的 `dispatchTouchEvent` 事件流识别滑动，并在事件到达子按键前取消释放，修复滑动结束时内容直接上屏。
+- 撤销 v5 对分页容器 `ACTION_UP` 处理顺序的错误修改；该修改会把正常轻扫改成取消事件，导致全键盘标点页必须拖过半页才能翻页。
+
+### Changed
+
+- 在 Android 11+ 为整个输入法窗口显式请求 120 Hz 帧率，改善分页滑动和候选区展开/收回动画的流畅度；系统会按屏幕能力选择最接近的刷新率。
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat6`。
+
+### Testing
+
+- 待在 Pixel 10 Pro / Android 16 真机复测九宫格滚动、全键盘标点翻页及输入法窗口实际呈现帧率。
+
 ## [0.3.0] - 2026-07-20
 
 对应 Compatibility v5 / versionCode `4520317`。

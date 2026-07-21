@@ -6,12 +6,16 @@
 
 ## 当前版本
 
-**Compatibility v5**
+**Compatibility v13**
 
 - 基础版本：Google Pinyin Input `4.5.2.193126728`，`arm64-v8a`
 - 原包名：`com.google.android.inputmethod.pinyin`
+- 兼容版包名：`com.google.android.inputmethod.pinyin.compat`，可与原版共存
+- 应用显示名称保持与原版一致
 - `targetSdkVersion`：26 → 28
-- `versionCode`：`4520317`
+- `versionCode`：`4520325`
+- 修复九宫格左侧候选/标点列表滑动后误上屏
+- 恢复全键盘标点页的正常轻扫翻页，并请求 120 Hz 输入法渲染
 - 首次使用引导更新为适配明暗主题的 Material Design 3 风格
 - 首次使用流程移除匿名使用情况选择页，完成或返回时直接关闭
 - 修复候选与标点列表滑动结束后误选内容
@@ -33,7 +37,7 @@
 patches/
   smali/NavigationBarCompat.smali  导航栏兼容代码
 scripts/
-  apply_patches.py                 对 apktool 输出应用 v5 补丁
+  apply_patches.py                 对 apktool 输出应用 v13 补丁
   build.ps1                        Windows 构建示例
 docs/
   compatibility-notes.md           调查和兼容性记录
@@ -63,7 +67,7 @@ PowerShell 示例：
   -KeyPassword 'your-password'
 ```
 
-修改版不能使用 Google 的私钥签名。第一次安装修改版前必须卸载官方版；之后只要保留并使用同一签名证书，就可以覆盖升级。
+兼容版使用独立包名，不需要 Google 的私钥签名，可与官方原版同时安装。兼容版后续升级需要继续使用同一签名证书。
 
 ## 原始 APK 校验信息
 

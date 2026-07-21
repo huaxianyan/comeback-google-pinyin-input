@@ -2,7 +2,8 @@
 
 ## 基础版本
 
-- package：`com.google.android.inputmethod.pinyin`
+- 原版 package：`com.google.android.inputmethod.pinyin`
+- Compatibility v10+ package：`com.google.android.inputmethod.pinyin.compat`
 - versionName：`4.5.2.193126728-arm64-v8a`
 - versionCode：`4520313`
 - minSdk：17
@@ -29,6 +30,14 @@
 
 1. `PinyinIME.onStartInputView()` 后；
 2. 旧框架调用 `Window.setNavigationBarColor()` 后。
+
+## 滑动事件与高刷新率
+
+九宫格左侧的 `ReadingTextCandidateHolderView` 继承自混淆类 `awo`（`ScrollView`）。旧实现仅在 `onTouchEvent()` 中把事件交给 `GestureDetector`，但手势开始时事件通常由子 `SoftKeyView` 持有，导致检测器漏掉 `DOWN`。此外，`SoftKeyboardView` 在标准 View 分派后还会通过 delegate/motion handler 再处理同一个事件。真机进一步确认列表本身能够滚动，误选固定发生在松手时，并选择手势起点处原先按住的候选或标点；官方原版在 Android 16 上也有完全相同的问题。旧代码隐含假设内部 `ScrollView` 和外层 `SoftKeyboardView` 操作同一个 `MotionEvent` 对象，但现代 Android 在向子 View 做坐标变换和分派时会使用事件副本。结果是内部 `awo` 即使把自己的释放副本改成 `ACTION_CANCEL`，之后运行的外层自定义按键管线仍收到原始 `ACTION_UP`。v11 在 `awo` 检测到超过 touch slop 的纵向位移后通过静态状态桥记录滚动；`SoftKeyboardView` 读取该状态并显式取消外层释放。v12 调整取消时序：内部 `ScrollView` 先接收原始 `ACTION_UP` 以计算 fling，标准 View 分派返回后，才在外层自定义按键处理前改为 `ACTION_CANCEL`。同时每次外层 `ACTION_DOWN` 都清空桥接状态。v13 不再使用事件局部 Y 坐标判断移动，因为现代系统对子事件的坐标变换会造成静止触摸误判；改为在 `ScrollView` 处理完 `MOVE` 后比较实际 `scrollY`，仅当列表内容确实发生位移时才取消外层按键释放。
+
+v5 曾把两个分页容器的取消辅助器提前到父分页器之前执行。这会让分页器把有效的 `ACTION_UP` 当作 `ACTION_CANCEL`，慢速滑动只能依靠超过半页的位移翻页。v6 恢复原始调用顺序；v7 进一步把提交距离从 25 dp 降至 8 dp，并移除最低 fling 速度的附加条件。
+
+Pixel 10 Pro 的屏幕工作在 120 Hz，但旧版输入法没有帧率偏好，现代系统可能把其 Surface 归入 60 Hz 的 normal 类别。v6 在每次开始输入时通过窗口 `preferredRefreshRate` 和 API 30+ `View.setFrameRate()` 请求 120 Hz；不支持 120 Hz 的屏幕由系统自动选择最接近的可用帧率。
 
 ## target SDK 策略
 

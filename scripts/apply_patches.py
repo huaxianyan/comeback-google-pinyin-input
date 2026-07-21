@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply the Android 16 compatibility v18 patch to apktool 2.12.1 output.
+"""Apply the Android 16 compatibility v19 patch to apktool 2.12.1 output.
 
 This script intentionally targets the unmodified Google Pinyin Input
 4.5.2.193126728 arm64-v8a APK. It aborts instead of guessing when an expected
@@ -46,8 +46,8 @@ def apply(decoded: Path) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520330\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat18",
+        "versionInfo:\n  versionCode: 4520331\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat19",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -406,6 +406,20 @@ def apply(decoded: Path) -> None:
         'android:showAsAction="never" />\n',
         "",
     )
+    replace_once(
+        decoded / "res/xml/setting_dictionary.xml",
+        '    <PreferenceCategory android:title="@string/setting_update_category_title">\n'
+        '        <com.google.android.apps.inputmethod.libs.framework.preference.widget.'
+        'AutoSyncedCheckBoxPreference android:persistent="true" '
+        'android:title="@string/setting_update_enabled_title" '
+        'android:key="@string/pref_key_enable_dictionary_update" />\n'
+        '        <CheckBoxPreference android:persistent="true" '
+        'android:title="@string/setting_update_notify_enabled_title" '
+        'android:key="@string/pref_key_enable_notify_dictionary_update" '
+        'android:dependency="@string/pref_key_enable_dictionary_update" />\n'
+        '    </PreferenceCategory>\n',
+        "",
+    )
 
     # PinyinApp's Laym instance registers Clearcut/Primes processors, daily
     # pings and keyboard event collectors. Without it, IMetrics remains usable
@@ -429,6 +443,80 @@ def apply(decoded: Path) -> None:
         "    # Compatibility build: Clearcut/Primes collection is disabled.\n"
         "    .line 18\n"
         "    :cond_2",
+    )
+
+    # Remove the dead Chinese system-dictionary updater and the remaining daily
+    # analytics task registration. Keep the unrelated local English model task.
+    pinyin_ime = decoded / "smali/com/google/android/inputmethod/pinyin/PinyinIME.smali"
+    replace_once(
+        pinyin_ime,
+        "    .line 5\n"
+        "    invoke-static {p0}, Lamo;->a(Landroid/content/Context;)Lamo;\n\n"
+        "    move-result-object v0\n\n"
+        "    const-string v1, \"new_words_update\"\n\n"
+        "    new-instance v2, Lcom/google/android/apps/inputmethod/libs/hmm/sync/"
+        "NewWordsUpdateTaskFactory;\n\n"
+        "    const-string v3, \"https://tools.google.com/service/update?as=pinyinsysdict\"\n\n"
+        "    .line 6\n"
+        "    invoke-static {p0}, Lbdt;->a(Landroid/content/Context;)Lbdt;\n\n"
+        "    move-result-object v4\n\n"
+        "    .line 7\n"
+        "    invoke-virtual {p0}, Lcom/google/android/inputmethod/pinyin/PinyinIME;"
+        "->getResources()Landroid/content/res/Resources;\n\n"
+        "    move-result-object v5\n\n"
+        "    const v6, 0x7f110252\n\n"
+        "    invoke-virtual {v5, v6}, Landroid/content/res/Resources;"
+        "->getString(I)Ljava/lang/String;\n\n"
+        "    move-result-object v5\n\n"
+        "    invoke-direct {v2, p0, v3, v4, v5}, Lcom/google/android/apps/inputmethod/"
+        "libs/hmm/sync/NewWordsUpdateTaskFactory;-><init>(Landroid/content/Context;"
+        "Ljava/lang/String;Lcom/google/android/apps/inputmethod/libs/hmm/"
+        "AbstractHmmEngineFactory;Ljava/lang/String;)V\n\n"
+        "    .line 8\n"
+        "    invoke-virtual {v0, v1, v2}, Lamo;->a(Ljava/lang/String;"
+        "Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "PeriodicalTaskFactory;)V\n\n",
+        "",
+    )
+    replace_once(
+        pinyin_ime,
+        "    .line 11\n"
+        "    invoke-virtual {p0}, Landroid/content/Context;->getResources()"
+        "Landroid/content/res/Resources;\n\n"
+        "    move-result-object v0\n\n"
+        "    const v1, 0x7f0b000b\n\n"
+        "    invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getBoolean(I)Z\n\n"
+        "    move-result v0\n\n"
+        "    if-eqz v0, :cond_0\n\n"
+        "    .line 12\n"
+        "    invoke-static {p0}, Lamo;->a(Landroid/content/Context;)Lamo;\n\n"
+        "    move-result-object v0\n\n"
+        "    const-string v1, \"daily_ping_task\"\n\n"
+        "    new-instance v2, Lazm;\n\n"
+        "    invoke-direct {v2}, Lazm;-><init>()V\n\n"
+        "    invoke-virtual {v0, v1, v2}, Lamo;->a(Ljava/lang/String;"
+        "Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "PeriodicalTaskFactory;)V\n\n"
+        "    .line 13\n"
+        "    :cond_0",
+        "    .line 13\n"
+        "    :cond_0",
+    )
+
+    # Remove the dictionary-update permission feature registration.
+    replace_once(
+        decoded / "smali/com/google/android/apps/inputmethod/pinyin/PinyinApp.smali",
+        "    .line 8\n"
+        "    const v1, 0x7f110252\n\n"
+        "    const v2, 0x7f1103ad\n\n"
+        "    new-array v3, v7, [Ljava/lang/String;\n\n"
+        "    const-string v4, \"android.permission.INTERNET\"\n\n"
+        "    aput-object v4, v3, v5\n\n"
+        "    const-string v4, \"android.permission.ACCESS_NETWORK_STATE\"\n\n"
+        "    aput-object v4, v3, v6\n\n"
+        "    invoke-virtual {v0, v1, v2, v3}, Lcom/google/android/apps/inputmethod/"
+        "libs/framework/core/FeaturePermissionsManager;->a(II[Ljava/lang/String;)V\n\n",
+        "",
     )
 
     # Use a distinct application ID so the compatibility build can coexist
@@ -499,7 +587,6 @@ def apply(decoded: Path) -> None:
         'LauncherIconVisibilityInitializer">',
     )
 
-    pinyin_ime = decoded / "smali/com/google/android/inputmethod/pinyin/PinyinIME.smali"
     replace_once(
         pinyin_ime,
         "    .line 75\n"
@@ -550,7 +637,7 @@ def apply(decoded: Path) -> None:
         helper_dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(helper_src, helper_dst)
 
-    print(f"Applied compatibility v18 patches to {decoded}")
+    print(f"Applied compatibility v19 patches to {decoded}")
 
 
 def main() -> None:

@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.14.0] - 2026-07-21
+
+对应 Compatibility v19 / versionCode `4520331`。
+
+### Removed
+
+- 移除用户词典设置页中的“词典更新”分类、“词典更新”开关和“词典更新通知”开关。
+- 停止向周期任务管理器注册 `new_words_update`，不再创建指向已失效 `https://tools.google.com/service/update?as=pinyinsysdict` 的 `NewWordsUpdateTaskFactory`。
+- 移除在线词典更新对应的 INTERNET/ACCESS_NETWORK_STATE 功能权限注册。
+- 补充移除遗留的 `daily_ping_task` 周期统计任务注册；保留与在线系统词典无关的本地 English model 周期维护任务。
+
+### Preserved
+
+- 保留用户词典本地导入、导出、快捷词典和用户词典同步入口；本次仅移除失效的系统词典在线更新。
+- 保留 v18 的统计、Firebase 和反馈上传清理。
+
+### Changed
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat19`。
+
+### Testing
+
+- APK 已重建、签名并覆盖安装到 Pixel 10 Pro；设置 XML 和 `PinyinIME` 中已无在线系统词典更新入口及任务注册。
+
 ## [0.13.0] - 2026-07-21
 
 对应 Compatibility v18 / versionCode `4520330`。

@@ -43,7 +43,9 @@ Pixel 10 Pro 的屏幕工作在 120 Hz，但旧版输入法没有帧率偏好，
 
 Compatibility v18 停止创建 `Laym`，因此不再实例化 `Lazr` Clearcut 适配器、Primes 监控或向 `Lalh` 注册每日 ping、IME 事件和键盘事件上传处理器。本地 `IMetrics` 调用仍可作为旧框架内部的空处理/计时接口存在。
 
-同时从 Manifest 移除 Firebase Instance ID、Firebase JobDispatcher 和 Google User Feedback 的所有系统入口，并从设置 XML 移除使用情况统计开关及发送反馈菜单。相关库代码暂保留为不可达代码，避免在缺少完整源码和 shrinker 的 smali 重建流程中误删共享依赖。用户词典同步及在线词典更新不属于本轮清理范围。
+同时从 Manifest 移除 Firebase Instance ID、Firebase JobDispatcher 和 Google User Feedback 的所有系统入口，并从设置 XML 移除使用情况统计开关及发送反馈菜单。相关库代码暂保留为不可达代码，避免在缺少完整源码和 shrinker 的 smali 重建流程中误删共享依赖。
+
+Compatibility v19 继续移除失效的系统词典在线更新：删除设置分类，不再注册 `new_words_update` 或创建访问 `tools.google.com/service/update?as=pinyinsysdict` 的任务工厂，并移除对应的网络权限功能声明。遗留的 `daily_ping_task` 注册也一并删除。用户词典导入、导出、快捷词典及用户词典同步保持不变。
 
 ## target SDK 策略
 

@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.29.0] - 2026-07-23
+
+对应 Compatibility v35 / versionCode `4520348`。
+
+### Changed
+
+- V34 真机确认全键盘符号/表情单指可轻松左右翻页，局部 velocity fling 修复通过。
+- 删除临时 `PagerDiagnosticsCompat`、`GPPagerDiag` 日志及 `lk` 中全部诊断调用；正式版只保留对 `PageableRecentSubCategorySoftKeyListHolderView` 验证通过的 legacy distance 门槛旁路。
+- V32 分页误选取消、慢速手势 50% settle、候选 pager、左侧竖向列表和其他 `lk` 使用者保持不变。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat35-symbol-pager-fling`。
+- APK 已成功重建、完成 zipalign 与 v1/v2/v3 签名校验，并覆盖安装到 Pixel 10 Pro；未执行功能测试。
+
 ## [0.28.0] - 2026-07-23
 
 对应 Compatibility v34 / versionCode `4520347`。

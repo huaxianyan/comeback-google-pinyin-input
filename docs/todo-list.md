@@ -28,7 +28,7 @@
 - [x] V32 真机复测未发现误选或点击回归；候选展开与左侧竖向列表滑动正常
 - [x] 将全键盘符号/表情横向 pager 手感拆分为独立任务，并对照 Gboard ViewPager2/RecyclerView 调查旧 `lk` 的 slop、25dp fling distance、minimum velocity 与 50% settle
 - [x] V33 诊断确认 30 次手势的旧 25dp final-delta 全为 0，fling 分支完全不可达；21 次回弹中 16 次速度已超过 minimum
-- [ ] V34 已仅对全键盘符号/表情 holder 跳过失效的 25dp final-delta 门槛；等待真机验证短 flick、慢拖回弹、过半翻页、点击和 V32 误选防护
+- [x] V34 真机确认单指可轻松左右翻页且无已知回归；V35 已移除临时诊断，只保留验证通过的局部 fling 修复
 
 ## 当前任务：既有功能基础复核
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply Android 16 compatibility v34 with symbol pager fling repair.
+"""Apply Android 16 compatibility v35 with validated symbol pager fling repair.
 
 This script intentionally targets the unmodified Google Pinyin Input
 4.5.2.193126728 arm64-v8a APK. It aborts instead of guessing when an expected
@@ -46,8 +46,8 @@ def apply(decoded: Path) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520347\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat34-symbol-pager-fling",
+        "versionInfo:\n  versionCode: 4520348\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat35-symbol-pager-fling",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -416,42 +416,6 @@ def apply(decoded: Path) -> None:
         "    if-le v0, v6, :cond_f\n\n"
         "    :compat_check_fling_velocity\n"
         "    invoke-static {v2}, Ljava/lang/Math;->abs(I)I",
-    )
-
-    # Keep V33 diagnostics for one validation cycle. Calls are type-gated and
-    # only observe the target decision; they do not alter pager state or timing.
-    replace_once(
-        four_directional_pager,
-        "    div-float v3, v0, v3\n\n"
-        "    .line 923\n"
-        "    iget v0, p0, Llk;->k:I",
-        "    div-float v3, v0, v3\n\n"
-        "    invoke-static {p0, v1, v3, v2}, Lcom/google/android/inputmethod/"
-        "pinyin/PagerDiagnosticsCompat;->begin(Landroid/view/View;IFI)V\n\n"
-        "    .line 923\n"
-        "    iget v0, p0, Llk;->k:I",
-    )
-    replace_once(
-        four_directional_pager,
-        "    float-to-int v0, v0\n\n"
-        "    .line 932\n"
-        "    invoke-static {v0}, Ljava/lang/Math;->abs(I)I",
-        "    float-to-int v0, v0\n\n"
-        "    invoke-static {p0, v0}, Lcom/google/android/inputmethod/pinyin/"
-        "PagerDiagnosticsCompat;->distance(Landroid/view/View;I)V\n\n"
-        "    .line 932\n"
-        "    invoke-static {v0}, Ljava/lang/Math;->abs(I)I",
-    )
-    replace_once(
-        four_directional_pager,
-        "    .line 941\n"
-        "    :cond_b\n"
-        "    invoke-direct {p0, v3, v5, v5, v2}, Llk;->a(IZZI)V",
-        "    .line 941\n"
-        "    :cond_b\n"
-        "    invoke-static {p0, v3}, Lcom/google/android/inputmethod/pinyin/"
-        "PagerDiagnosticsCompat;->finish(Landroid/view/View;I)V\n\n"
-        "    invoke-direct {p0, v3, v5, v5, v2}, Llk;->a(IZZI)V",
     )
 
     # Let the ScrollView receive the original UP first so it can calculate
@@ -974,7 +938,6 @@ def apply(decoded: Path) -> None:
     for helper_name in (
         "NavigationBarCompat.smali",
         "ScrollTouchCompat.smali",
-        "PagerDiagnosticsCompat.smali",
         "DictionaryRecoveryCompat.smali",
     ):
         helper_src = ROOT / "patches/smali" / helper_name
@@ -993,7 +956,7 @@ def apply(decoded: Path) -> None:
         raise RuntimeError(f"Refusing to overwrite existing helper: {candidate_dst}")
     shutil.copyfile(candidate_src, candidate_dst)
 
-    print(f"Applied compatibility v34 symbol pager fling patches to {decoded}")
+    print(f"Applied compatibility v35 validated symbol pager fling patches to {decoded}")
 
 
 def main() -> None:

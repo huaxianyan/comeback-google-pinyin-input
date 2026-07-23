@@ -218,4 +218,4 @@ V34 已按诊断结论实现：
 - 候选 pager 和其他 `lk` 使用者仍执行原来的 distance + velocity 双重条件；
 - V32 外层点击取消、页码、target clamp、Scroller 和动画均未修改。
 
-V33 诊断保留一个验证周期，并修正 `result` 文本显示；其中 `legacyDistance` 继续用于确认旧条件，`fling` 改为反映 V34 对符号/表情实际采用的 velocity 判定。安装后已清空 Logcat。
+V34 真机测试确认单指可以轻松左右翻页，点击、误选防护及其他已测路径未出现问题，局部 fling 修复通过。验证后制作 V35 正式版：删除 `PagerDiagnosticsCompat` 及 `lk` 中全部诊断调用，只保留经过验证的符号/表情类型分支；正式构建不再产生 `GPPagerDiag` 日志。

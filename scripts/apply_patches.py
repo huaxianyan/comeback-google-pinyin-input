@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply Android 16 compatibility v33 with symbol pager diagnostics.
+"""Apply Android 16 compatibility v34 with symbol pager fling repair.
 
 This script intentionally targets the unmodified Google Pinyin Input
 4.5.2.193126728 arm64-v8a APK. It aborts instead of guessing when an expected
@@ -46,8 +46,8 @@ def apply(decoded: Path) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520346\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat33-pager-diagnostics",
+        "versionInfo:\n  versionCode: 4520347\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat34-symbol-pager-fling",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -397,10 +397,29 @@ def apply(decoded: Path) -> None:
         "    .line 5\n",
     )
 
-    # V33 diagnostic only: record the old pager's already-computed decision for
-    # full symbol/emoji holders. Calls are type-gated in PagerDiagnosticsCompat
-    # and do not modify any lk field, MotionEvent, threshold, target, or timing.
+    # V34: lk's legacy 25dp check compares UP against a final internal pointer
+    # baseline and is always zero on current Android, making its fling branch
+    # unreachable despite high VelocityTracker values. Only for the full
+    # symbol/emoji subclass, rely on the existing dragging gate plus the system
+    # minimum fling velocity, as RecyclerView/ViewPager2 does. Every other lk
+    # user retains the original distance + velocity double gate.
     four_directional_pager = decoded / "smali/lk.smali"
+    replace_once(
+        four_directional_pager,
+        "    iget v6, p0, Llk;->n:I\n\n"
+        "    if-le v0, v6, :cond_f\n\n"
+        "    invoke-static {v2}, Ljava/lang/Math;->abs(I)I",
+        "    iget v6, p0, Llk;->n:I\n\n"
+        "    instance-of v7, p0, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "keyboard/widget/PageableRecentSubCategorySoftKeyListHolderView;\n\n"
+        "    if-nez v7, :compat_check_fling_velocity\n\n"
+        "    if-le v0, v6, :cond_f\n\n"
+        "    :compat_check_fling_velocity\n"
+        "    invoke-static {v2}, Ljava/lang/Math;->abs(I)I",
+    )
+
+    # Keep V33 diagnostics for one validation cycle. Calls are type-gated and
+    # only observe the target decision; they do not alter pager state or timing.
     replace_once(
         four_directional_pager,
         "    div-float v3, v0, v3\n\n"
@@ -974,7 +993,7 @@ def apply(decoded: Path) -> None:
         raise RuntimeError(f"Refusing to overwrite existing helper: {candidate_dst}")
     shutil.copyfile(candidate_src, candidate_dst)
 
-    print(f"Applied compatibility v33 symbol pager diagnostic patches to {decoded}")
+    print(f"Applied compatibility v34 symbol pager fling patches to {decoded}")
 
 
 def main() -> None:

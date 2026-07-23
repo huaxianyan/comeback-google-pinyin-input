@@ -100,12 +100,6 @@
 
     sget v1, Lcom/google/android/inputmethod/pinyin/PagerDiagnosticsCompat;->distance:I
 
-    invoke-static {v1}, Ljava/lang/Math;->abs(I)I
-
-    move-result v2
-
-    if-le v2, p0, :not_fling
-
     sget v2, Lcom/google/android/inputmethod/pinyin/PagerDiagnosticsCompat;->velocity:I
 
     invoke-static {v2}, Ljava/lang/Math;->abs(I)I
@@ -164,7 +158,7 @@
 
     invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(F)Ljava/lang/StringBuilder;
 
-    const-string v4, " distance="
+    const-string v4, " legacyDistance="
 
     invoke-virtual {v3, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
@@ -200,7 +194,9 @@
 
     invoke-virtual {v3, p0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
-    if-eqz v4, :result_same
+    sget v4, Lcom/google/android/inputmethod/pinyin/PagerDiagnosticsCompat;->currentPage:I
+
+    if-eq v4, p1, :result_same
 
     const-string p0, "page"
 

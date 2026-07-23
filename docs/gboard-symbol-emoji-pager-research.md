@@ -205,3 +205,17 @@ APK 安装后已清空 Logcat。维护者随后完成了成功翻页与回弹复
 - 候选 pager 和其他 `lk` 使用者继续保留原逻辑。
 
 这比猜测性降低 50% 阈值更有证据，也不会让慢速小幅拖动自动翻页。
+
+## V34 局部修复
+
+V34 已按诊断结论实现：
+
+- 在共享 `lk` 的 fling 双重门槛处增加精确类型判断；
+- 仅 `PageableRecentSubCategorySoftKeyListHolderView` 跳过失效的 legacy final-delta 25dp 条件；
+- 仍要求 pager 已通过原生 paging touch slop 和方向竞争进入 dragging；
+- 仍要求绝对 velocity 大于系统 minimum fling velocity；
+- velocity 不足时继续使用原生 50% settle；
+- 候选 pager 和其他 `lk` 使用者仍执行原来的 distance + velocity 双重条件；
+- V32 外层点击取消、页码、target clamp、Scroller 和动画均未修改。
+
+V33 诊断保留一个验证周期，并修正 `result` 文本显示；其中 `legacyDistance` 继续用于确认旧条件，`fling` 改为反映 V34 对符号/表情实际采用的 velocity 判定。安装后已清空 Logcat。

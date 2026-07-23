@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.25.0] - 2026-07-23
+
+对应 Compatibility v31 / versionCode `4520344`。
+
+### Reverted
+
+- 根据 V29/V30 真机测试结果，回滚全部 IME 帧率干预：删除 `FrameRateCompat`、Window touch boost、Window preferred refresh rate、View frame-rate vote 以及开始/结束输入生命周期注入。
+- 不恢复曾导致疑似异常发热的固定 120Hz 实现；当前完全由 Android 系统默认调度帧率和 LTPO/ARR。
+- 高刷新率支持推迟到 target API 与渲染管线现代化后重新实现。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat31-system-frame-rate`。
+
 ## [0.23.0] - 2026-07-23
 
 对应 Compatibility v29 / versionCode `4520342`。

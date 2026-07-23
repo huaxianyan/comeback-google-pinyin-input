@@ -37,7 +37,7 @@
 
 v5 曾把两个分页容器的取消辅助器提前到父分页器之前执行。这会让分页器把有效的 `ACTION_UP` 当作 `ACTION_CANCEL`，慢速滑动只能依靠超过半页的位移翻页。v6 恢复原始调用顺序；v7 进一步把提交距离从 25 dp 降至 8 dp，并移除最低 fling 速度的附加条件。
 
-Pixel 10 Pro 的屏幕工作在 120 Hz，但旧版输入法没有帧率偏好，现代系统可能把其 Surface 归入 60 Hz 的 normal 类别。v6 在每次开始输入时通过窗口 `preferredRefreshRate` 和 API 30+ `View.setFrameRate()` 请求 120 Hz；不支持 120 Hz 的屏幕由系统自动选择最接近的可用帧率。
+Pixel 10 Pro 的屏幕工作在 120 Hz，但旧版输入法没有帧率偏好。v6 曾在每次开始输入时同时通过窗口 `preferredRefreshRate` 和 API 30+ `View.setFrameRate()` 固定请求 120 Hz。后续对照 Gboard 发现，这会在键盘可见但空闲时持续保留高刷 vote，妨碍 LTPO/ARR 降频并可能增加发热。Compatibility v29 已移除两条固定 120 Hz 请求：API 35+ 改用 Gboard 同款 `Window.setFrameRateBoostOnTouchEnabled(true)`，只在触摸期间由系统提升刷新率；输入视图结束时关闭 boost，并把 Window/View 的遗留帧率 vote 清回 0。旧 Android 版本不再写死具体刷新率，由系统选择。
 
 ## 失效网络组件清理
 

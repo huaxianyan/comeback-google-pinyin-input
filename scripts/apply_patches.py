@@ -46,8 +46,8 @@ def apply(decoded: Path, application_id: str) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520351\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat38-first-run-navigation",
+        "versionInfo:\n  versionCode: 4520352\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat39-guided-first-run",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -76,8 +76,9 @@ def apply(decoded: Path, application_id: str) -> None:
         destination = decoded / "res" / source.relative_to(resource_patches)
         destination.parent.mkdir(parents=True, exist_ok=True)
         overwritten_layouts = {
+            "first_run.xml",
             "first_run_page_done.xml",
-            "first_run_page_indicator_image.xml",
+            "first_run_page_footer.xml",
         }
         if destination.exists() and source.name not in overwritten_layouts:
             raise RuntimeError(f"Refusing to overwrite resource: {destination}")
@@ -293,6 +294,80 @@ def apply(decoded: Path, application_id: str) -> None:
         "    return-void\n"
         ".end method\n\n"
         ".method protected final a()I",
+    )
+
+    # The first-run footer uses the framework's existing navi_skip slot as a
+    # Previous button. Keep the same listener's original Finish behavior for
+    # feature-tour activities, but move one page back in Pinyin first-run.
+    previous_listener = decoded / "smali/apz.smali"
+    replace_once(
+        previous_listener,
+        ".method public final onClick(Landroid/view/View;)V\n"
+        "    .locals 1\n\n"
+        "    .prologue\n"
+        "    .line 2\n"
+        "    iget-object v0, p0, Lapz;->a:Lapy;\n\n"
+        "    invoke-virtual {v0}, Lapy;->finish()V\n\n"
+        "    .line 3\n"
+        "    return-void\n"
+        ".end method",
+        ".method public final onClick(Landroid/view/View;)V\n"
+        "    .locals 2\n\n"
+        "    iget-object v0, p0, Lapz;->a:Lapy;\n\n"
+        "    instance-of v1, v0, Lcom/google/android/apps/inputmethod/pinyin/"
+        "firstrun/PinyinFirstRunActivity;\n\n"
+        "    if-eqz v1, :finish_feature_activity\n\n"
+        "    iget-object v0, v0, Lapy;->a:Lcom/google/android/apps/inputmethod/libs/"
+        "framework/keyboard/widget/BidiViewPager;\n\n"
+        "    invoke-virtual {v0}, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "keyboard/widget/BidiViewPager;->a()I\n\n"
+        "    move-result v1\n\n"
+        "    if-lez v1, :done\n\n"
+        "    add-int/lit8 v1, v1, -0x1\n\n"
+        "    invoke-virtual {v0, v1}, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "keyboard/widget/BidiViewPager;->b(I)V\n\n"
+        "    goto :done\n\n"
+        "    :finish_feature_activity\n"
+        "    invoke-virtual {v0}, Lapy;->finish()V\n\n"
+        "    :done\n"
+        "    return-void\n"
+        ".end method",
+    )
+
+    # Page selection owns footer visibility and initial Next enabled state. Run
+    # this after the old generic footer logic so first/last-page rules win.
+    page_adapter = decoded / "smali/aqc.smali"
+    replace_once(
+        page_adapter,
+        "    :cond_3\n"
+        "    return-void\n\n"
+        "    :cond_4",
+        "    :cond_3\n"
+        "    invoke-virtual {p0, p1}, Laqc;->a(I)I\n\n"
+        "    move-result v4\n\n"
+        "    iget-object v2, p0, Laqc;->a:Lapy;\n\n"
+        "    invoke-static {v2, v4, p2}, Lcom/google/android/apps/inputmethod/pinyin/"
+        "firstrun/FirstRunNavigationCompat;->update(Lapy;ILjava/lang/Object;)V\n\n"
+        "    return-void\n\n"
+        "    :cond_4",
+    )
+
+    # Completing Enable/Select used to auto-advance through Lapt. Keep the page
+    # in place and only unlock Next, so navigation is explicit and predictable.
+    completion_runnable = decoded / "smali/apt.smali"
+    replace_once(
+        completion_runnable,
+        "    check-cast v0, Lapy;\n\n"
+        "    iget-object v1, p0, Lapt;->a:Lapr;",
+        "    check-cast v0, Lapy;\n\n"
+        "    instance-of v1, v0, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
+        "PinyinFirstRunActivity;\n\n"
+        "    if-eqz v1, :original_completion\n\n"
+        "    invoke-static {v0}, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
+        "FirstRunNavigationCompat;->markCurrentComplete(Lapy;)V\n\n"
+        "    return-void\n\n"
+        "    :original_completion\n"
+        "    iget-object v1, p0, Lapt;->a:Lapr;",
     )
 
     # Completion/close must explicitly bring Home forward before removing the
@@ -1010,6 +1085,26 @@ def apply(decoded: Path, application_id: str) -> None:
         helper_dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(helper_src, helper_dst)
 
+    first_run_helpers = (
+        (
+            "FirstRunNavigationCompat.smali",
+            "smali/com/google/android/apps/inputmethod/pinyin/firstrun/"
+            "FirstRunNavigationCompat.smali",
+        ),
+        (
+            "NonSwipeableFirstRunViewPager.smali",
+            "smali/com/google/android/apps/inputmethod/libs/framework/firstrun/"
+            "NonSwipeableFirstRunViewPager.smali",
+        ),
+    )
+    for helper_name, relative_destination in first_run_helpers:
+        helper_src = ROOT / "patches/smali" / helper_name
+        helper_dst = decoded / relative_destination
+        if helper_dst.exists():
+            raise RuntimeError(f"Refusing to overwrite existing helper: {helper_dst}")
+        helper_dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(helper_src, helper_dst)
+
     candidate_src = ROOT / "patches/smali/ClipboardCandidateCompat.smali"
     candidate_dst = decoded / (
         "smali/com/google/android/apps/inputmethod/libs/framework/core/"
@@ -1019,7 +1114,7 @@ def apply(decoded: Path, application_id: str) -> None:
         raise RuntimeError(f"Refusing to overwrite existing helper: {candidate_dst}")
     shutil.copyfile(candidate_src, candidate_dst)
 
-    print(f"Applied compatibility v38 first-run navigation patches to {decoded} ({application_id})")
+    print(f"Applied compatibility v39 guided first-run patches to {decoded} ({application_id})")
 
 
 def main() -> None:

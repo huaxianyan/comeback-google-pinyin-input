@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.33.0] - 2026-07-23
+
+对应 Compatibility v39 / versionCode `4520352`，继续使用独立 guideaudit 包验证显式引导导航。
+
+### Changed
+
+- 完整移除首次引导底部 PageIndicator，不再依赖旧 `PageIndicatorView` 的 enabled-state 视觉语义。
+- 将首次引导 pager 替换为 `NonSwipeableFirstRunViewPager`，仅禁止用户触摸滑页，保留按钮触发的原生程序化翻页和动画。
+- 底部改为左侧“上一步”和右侧“下一步”按钮；第一页隐藏上一步，最后一页隐藏下一步。
+- 上一步复用旧框架 `navi_skip` 插槽但仅在 `PinyinFirstRunActivity` 中改为后退，功能介绍 Activity 继续保持原来的跳过/关闭行为。
+- 启用或选择输入法完成后不再自动跳页，只解锁当前页的下一步按钮；未完成时下一步不可交互，并使用明确的 disabled 背景和文字颜色。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat39-guided-first-run`。
+- APK 已成功重建，通过 zipalign 与 v1/v2/v3 签名校验；设备在覆盖安装前断开 ADB，因此尚未安装和打开 V39。
+
 ## [0.32.0] - 2026-07-23
 
 对应 Compatibility v38 / versionCode `4520351`，继续使用独立 guideaudit 包验证首次引导。

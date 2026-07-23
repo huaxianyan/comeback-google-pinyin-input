@@ -27,7 +27,8 @@
 - [x] V32 将分页辅助类 `aws` 接入 `ScrollTouchCompat` 外层取消桥，保持原生 pager/fling 参数不变
 - [x] V32 真机复测未发现误选或点击回归；候选展开与左侧竖向列表滑动正常
 - [x] 将全键盘符号/表情横向 pager 手感拆分为独立任务，并对照 Gboard ViewPager2/RecyclerView 调查旧 `lk` 的 slop、25dp fling distance、minimum velocity 与 50% settle
-- [ ] V33 无行为修改的 pager 诊断版已安装并清空 Logcat；等待复现成功翻页/回弹后读取位移、velocity、页面偏移和目标页
+- [x] V33 诊断确认 30 次手势的旧 25dp final-delta 全为 0，fling 分支完全不可达；21 次回弹中 16 次速度已超过 minimum
+- [ ] 仅对全键盘符号/表情 holder 跳过失效的 25dp final-delta 门槛，保留 dragging、minimum velocity 与非 fling 50% settle
 
 ## 当前任务：既有功能基础复核
 

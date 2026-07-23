@@ -172,4 +172,36 @@ V33 已实现上述无行为修改的诊断：
 - 日志 tag 为 `GPPagerDiag`；
 - 每次有效拖动松手记录 current、target、changed、offset、distance、25dp threshold、velocity、minimum velocity、fling 与最终 page/snap_back。
 
-APK 安装后已清空 Logcat。维护者需要在全键盘符号/表情界面分别复现数次成功翻页和回弹，然后由编码代理读取 `GPPagerDiag` 数据。
+APK 安装后已清空 Logcat。维护者随后完成了成功翻页与回弹复现。
+
+## V33 采样结果
+
+当前 Logcat 中可完整解析 30 次目标页决策：
+
+- 成功翻页：9 次；
+- 回弹：21 次；
+- 进入 fling 分支：0 次；
+- 旧 pager 用于 25dp 检查的 distance：30 次全部为 0；
+- 系统 minimum fling velocity：131px/s；
+- 21 次回弹中有 16 次松手速度已经超过 minimum velocity；
+- 回弹样本绝对速度中位数约 3792px/s，最高 11016px/s；
+- 成功样本 offset 范围约 0.545–0.780；
+- 回弹样本 offset 范围约 0.167–0.424。
+
+结论非常明确：pager 已经进入 dragging，VelocityTracker 也产生了远高于 minimum 的速度，但旧 `lk` 的额外 distance 条件始终失败，导致 fling 路径完全不可达。所有成功翻页都来自拖过 50% 后的位置 settle；所有未超过 50% 的快速 flick 仍然回弹。
+
+这也解释了“需要用力拖过半屏”的手感。问题不在 paging touch slop，也不在 velocity 太低，而在旧实现把 final pointer position 与其内部基准 `c` 的差值作为额外 25dp 门槛；在当前 Android 事件序列中该差值归零，不能代表整次手势总位移。
+
+### 最小修正依据
+
+现代 Gboard 的 ViewPager2 由 RecyclerView fling/snap 驱动：容器已经进入 dragging 后，主要使用 velocity threshold 决定 fling，不再叠加这个失效的旧 `lk` final-delta 25dp 门槛。
+
+建议仅对 `PageableRecentSubCategorySoftKeyListHolderView`：
+
+- 保留 `getScaledPagingTouchSlop()` 与“水平位移大于垂直位移”的 dragging 判定；
+- 保留系统 minimum fling velocity；
+- 保留非 fling 时 50% settle；
+- 跳过失效的 25dp final-delta 条件，让已确认 dragging 且 velocity 超过 minimum 的手势进入原有 fling 目标页逻辑；
+- 候选 pager 和其他 `lk` 使用者继续保留原逻辑。
+
+这比猜测性降低 50% 阈值更有证据，也不会让慢速小幅拖动自动翻页。

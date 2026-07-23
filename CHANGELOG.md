@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.26.0] - 2026-07-23
+
+对应 Compatibility v32 / versionCode `4520345`。
+
+### Fixed
+
+- 对照 Gboard 的显式滚动取消协议，将分页辅助类 `aws` 接入现有 `ScrollTouchCompat` 外层状态桥。
+- 分页候选及全键盘符号/表情在超过原生 paging touch slop 后，除取消 holder 自身事件副本外，也会取消 `SoftKeyboardView` 自定义按键管线的外层释放，避免现代 Android 上滑动后松手误选起点按键。
+- 保持 pager 的 `super -> aws detector` 顺序以及原生 touch slop、方向、速度、翻页阈值和 fling 参数不变；不调整已经验证的左侧竖向列表逻辑。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat32-pageable-touch-cancel`。
+- APK 已成功重建、完成 zipalign 与 v1/v2/v3 签名校验，并覆盖安装到 Pixel 10 Pro；未执行功能测试。
+
 ## [0.25.0] - 2026-07-23
 
 对应 Compatibility v31 / versionCode `4520344`。

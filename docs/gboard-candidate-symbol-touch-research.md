@@ -151,6 +151,14 @@ Gboard 证据支持使用 touch slop，而不是等待 `scrollY` 变化。若修
 - Gboard 也让 ScrollView、RecyclerView、ViewPager 负责滚动动力学；
 - 兼容层只应负责把“已经进入拖动”通知外层按键管线。
 
-## 当前建议
+## V32 实施
 
-下一版只对 `aws` 增加一条显式滚动状态桥，保持 pager 的 `super -> detector` 顺序及所有原生滚动参数不变。真机分别验证候选分页、符号/表情分页、短距离点击和长距离 fling 后，再决定是否调整 `awo` 的边界拖动判据。
+V32 已按最小方案修改 `aws`：
+
+- `aws` 在 MOVE 或 UP 确认超过 paging touch slop 时，额外调用 `ScrollTouchCompat.markScrolling()`；
+- 保留原有 `MotionEvent.setAction(CANCEL)`；
+- 不修改 `PageableCandidatesHolderView` 与 `PageableSoftKeyListHolderView` 的 `super -> aws detector` 顺序；
+- 不修改 touch slop、方向、速度、翻页阈值、页码和 fling；
+- 不调整已经通过真机验证的 `awo`/左侧竖向列表判据。
+
+现有 `SoftKeyboardView` 会在标准 View 分派完成后读取桥接状态，并取消送往自定义按键管线的外层 UP。下一步由维护者真机分别验证候选分页、符号/表情分页、短距离点击和长距离 fling，再决定是否调整 `awo` 的边界拖动判据。

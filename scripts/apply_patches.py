@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply Android 16 compatibility v31 without legacy IME frame-rate overrides.
+"""Apply Android 16 compatibility v32 with pageable touch cancellation.
 
 This script intentionally targets the unmodified Google Pinyin Input
 4.5.2.193126728 arm64-v8a APK. It aborts instead of guessing when an expected
@@ -46,8 +46,8 @@ def apply(decoded: Path) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520344\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat31-system-frame-rate",
+        "versionInfo:\n  versionCode: 4520345\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat32-pageable-touch-cancel",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -363,6 +363,39 @@ def apply(decoded: Path) -> None:
     # the click-cancellation helper mutates it. v5 reversed this order and made
     # every genuine page swipe look like ACTION_CANCEL, forcing users to drag
     # beyond half a page before the page could change.
+    #
+    # Android now gives the pageable holder a transformed MotionEvent copy, so
+    # aws cancelling only that copy does not reliably cancel SoftKeyboardView's
+    # custom key pipeline. Preserve aws' own CANCEL and additionally bridge its
+    # confirmed paging-touch-slop state to the outer event, matching Gboard's
+    # ohc -> rzb -> SoftKeyboardView cancellation protocol.
+    pageable_touch = decoded / "smali/aws.smali"
+    replace_once(
+        pageable_touch,
+        "    .line 13\n"
+        "    invoke-virtual {p1, v2}, Landroid/view/MotionEvent;->setAction(I)V\n\n"
+        "    goto :goto_0\n\n"
+        "    .line 14\n",
+        "    .line 13\n"
+        "    invoke-static {}, Lcom/google/android/inputmethod/pinyin/"
+        "ScrollTouchCompat;->markScrolling()V\n\n"
+        "    invoke-virtual {p1, v2}, Landroid/view/MotionEvent;->setAction(I)V\n\n"
+        "    goto :goto_0\n\n"
+        "    .line 14\n",
+    )
+    replace_once(
+        pageable_touch,
+        "    .line 17\n"
+        "    invoke-virtual {p1, v2}, Landroid/view/MotionEvent;->setAction(I)V\n\n"
+        "    goto :goto_0\n\n"
+        "    .line 5\n",
+        "    .line 17\n"
+        "    invoke-static {}, Lcom/google/android/inputmethod/pinyin/"
+        "ScrollTouchCompat;->markScrolling()V\n\n"
+        "    invoke-virtual {p1, v2}, Landroid/view/MotionEvent;->setAction(I)V\n\n"
+        "    goto :goto_0\n\n"
+        "    .line 5\n",
+    )
 
     # Let the ScrollView receive the original UP first so it can calculate
     # fling velocity. Only afterwards cancel the outer copy before the custom
@@ -902,7 +935,7 @@ def apply(decoded: Path) -> None:
         raise RuntimeError(f"Refusing to overwrite existing helper: {candidate_dst}")
     shutil.copyfile(candidate_src, candidate_dst)
 
-    print(f"Applied compatibility v31 system frame-rate patches to {decoded}")
+    print(f"Applied compatibility v32 pageable touch cancellation patches to {decoded}")
 
 
 def main() -> None:

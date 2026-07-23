@@ -25,7 +25,8 @@
 - [x] 调整候选与符号翻页容器，在滑动结束前发送取消事件，避免松手误选
 - [x] 对照 Gboard 调查 ScrollView、分页候选、RecyclerView、ViewPager 与外层 SoftKeyboardView 的显式滚动取消协议
 - [x] V32 将分页辅助类 `aws` 接入 `ScrollTouchCompat` 外层取消桥，保持原生 pager/fling 参数不变
-- [ ] 在 Android 16 真机复测候选列表、全键盘符号/表情和左侧竖向标点的滑动、翻页和点击
+- [x] V32 真机复测未发现误选或点击回归；候选展开与左侧竖向列表滑动正常
+- [ ] 独立复核旧 `lk` 横向 pager：全键盘符号/表情需较大距离或速度，否则容易回弹；暂不猜测性修改 50% settle 阈值
 
 ## 当前任务：既有功能基础复核
 

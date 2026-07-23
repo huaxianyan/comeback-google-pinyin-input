@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.30.0] - 2026-07-23
+
+对应 Compatibility v36 / versionCode `4520349`。
+
+### Changed
+
+- 对照当前 Gboard，将手写 `ayc` 的 down/move/up 局部裁剪改为不带 `Region.Op` 的 `Canvas.clipRect(RectF)`，继续以成对 save/restore 隔离每次 dirty rect 绘制。
+- 为 `aye` 与 `HandwritingOverlayView` 的全画布清屏补齐 save/restore，并在恢复完整 Canvas 状态后再重放保留的 strokes。
+- 不修改 ALPHA_8 离屏 Bitmap、pressure、Path、dirty rect、MotionEvent、Stroke 或 JNI 识别路径；滑行轨迹继续保留原有独立修复。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat36-handwriting-canvas`。
+- APK 已成功重建，通过 zipalign 与 v1/v2/v3 签名校验，并覆盖安装到 Pixel 10 Pro；未执行功能测试，手写验证由项目维护者完成。
+
 ## [0.29.0] - 2026-07-23
 
 对应 Compatibility v35 / versionCode `4520348`。

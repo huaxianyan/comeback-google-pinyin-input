@@ -46,8 +46,8 @@ def apply(decoded: Path) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520348\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat35-symbol-pager-fling",
+        "versionInfo:\n  versionCode: 4520349\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat36-handwriting-canvas",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -84,46 +84,22 @@ def apply(decoded: Path) -> None:
             raise RuntimeError(f"Refusing to overwrite resource: {destination}")
         shutil.copyfile(source, destination)
 
-    # Android only permits INTERSECT and DIFFERENCE for Canvas clipping on
-    # current releases. The legacy handwriting/gesture renderers use REPLACE,
-    # which throws IllegalArgumentException as soon as a stroke starts.
-    replace_exactly(
-        decoded / "smali/ayc.smali",
-        "Landroid/graphics/Region$Op;->REPLACE:Landroid/graphics/Region$Op;",
-        "Landroid/graphics/Region$Op;->INTERSECT:Landroid/graphics/Region$Op;",
-        3,
-    )
-    for relative in (
-        "smali/aye.smali",
-        "smali/com/google/android/apps/inputmethod/libs/gestureui/"
-        "GestureOverlayView$a.smali",
-        "smali/com/google/android/apps/inputmethod/libs/handwriting/keyboard/"
-        "HandwritingOverlayView.smali",
-    ):
-        replace_exactly(
-            decoded / relative,
-            "Landroid/graphics/Region$Op;->REPLACE:Landroid/graphics/Region$Op;",
-            "Landroid/graphics/Region$Op;->INTERSECT:Landroid/graphics/Region$Op;",
-            1,
-        )
-
-    # REPLACE did not accumulate clipping between points. INTERSECT does, so
-    # isolate each renderer clip with save/restore; otherwise recognition works
-    # but almost the entire stroke is clipped out and remains invisible.
+    # Android rejects the legacy Region.Op.REPLACE clip used by the old
+    # handwriting renderer. Match current Gboard: isolate every dirty-rect draw
+    # with save/restore and use the default INTERSECT clipRect overload, without
+    # depending on the deprecated Region.Op API.
     stroke_renderer = decoded / "smali/ayc.smali"
-    for clip_call in (
-        "    invoke-virtual {p2, v1, v2}, Landroid/graphics/Canvas;->clipRect("
-        "Landroid/graphics/RectF;Landroid/graphics/Region$Op;)Z",
-        "    invoke-virtual {p2, v0, v1}, Landroid/graphics/Canvas;->clipRect("
-        "Landroid/graphics/RectF;Landroid/graphics/Region$Op;)Z",
-        "    invoke-virtual {p2, v6, v1}, Landroid/graphics/Canvas;->clipRect("
-        "Landroid/graphics/RectF;Landroid/graphics/Region$Op;)Z",
-    ):
+    for rect_register, op_register in (("v1", "v2"), ("v0", "v1"), ("v6", "v1")):
         replace_once(
             stroke_renderer,
-            clip_call,
+            f"    sget-object {op_register}, Landroid/graphics/Region$Op;->REPLACE:"
+            "Landroid/graphics/Region$Op;\n\n"
+            f"    invoke-virtual {{p2, {rect_register}, {op_register}}}, "
+            "Landroid/graphics/Canvas;->clipRect(Landroid/graphics/RectF;"
+            "Landroid/graphics/Region$Op;)Z",
             "    invoke-virtual {p2}, Landroid/graphics/Canvas;->save()I\n\n"
-            + clip_call,
+            f"    invoke-virtual {{p2, {rect_register}}}, Landroid/graphics/Canvas;"
+            "->clipRect(Landroid/graphics/RectF;)Z",
         )
     for draw_call in (
         "    invoke-virtual {p2, v2, v3, v0, v4}, Landroid/graphics/Canvas;"
@@ -138,6 +114,73 @@ def apply(decoded: Path) -> None:
             draw_call,
             draw_call + "\n\n    invoke-virtual {p2}, Landroid/graphics/Canvas;->restore()V",
         )
+
+    # Keep full-canvas handwriting clears state-neutral as well. Restore before
+    # replaying retained strokes so every renderer call starts from a clean clip.
+    for relative in (
+        "smali/aye.smali",
+        "smali/com/google/android/apps/inputmethod/libs/handwriting/keyboard/"
+        "HandwritingOverlayView.smali",
+    ):
+        clear_path = decoded / relative
+        replace_once(
+            clear_path,
+            "    iget-object v0, v6, Lcom/google/android/apps/inputmethod/libs/"
+            "handwriting/keyboard/HandwritingOverlayView;->a:Landroid/graphics/Canvas;\n\n"
+            "    sget-object v1, Landroid/graphics/PorterDuff$Mode;->CLEAR:"
+            "Landroid/graphics/PorterDuff$Mode;\n\n"
+            "    invoke-virtual {v0, v7, v1}, Landroid/graphics/Canvas;->drawColor("
+            "ILandroid/graphics/PorterDuff$Mode;)V"
+            if relative == "smali/aye.smali"
+            else
+            "    iget-object v0, p0, Lcom/google/android/apps/inputmethod/libs/"
+            "handwriting/keyboard/HandwritingOverlayView;->a:Landroid/graphics/Canvas;\n\n"
+            "    sget-object v1, Landroid/graphics/PorterDuff$Mode;->CLEAR:"
+            "Landroid/graphics/PorterDuff$Mode;\n\n"
+            "    invoke-virtual {v0, v6, v1}, Landroid/graphics/Canvas;->drawColor("
+            "ILandroid/graphics/PorterDuff$Mode;)V",
+            (
+                "    iget-object v0, v6, Lcom/google/android/apps/inputmethod/libs/"
+                "handwriting/keyboard/HandwritingOverlayView;->a:Landroid/graphics/Canvas;\n\n"
+                "    sget-object v1, Landroid/graphics/PorterDuff$Mode;->CLEAR:"
+                "Landroid/graphics/PorterDuff$Mode;\n\n"
+                "    invoke-virtual {v0, v7, v1}, Landroid/graphics/Canvas;->drawColor("
+                "ILandroid/graphics/PorterDuff$Mode;)V\n\n"
+                "    invoke-virtual {v0}, Landroid/graphics/Canvas;->restore()V"
+                if relative == "smali/aye.smali"
+                else
+                "    iget-object v0, p0, Lcom/google/android/apps/inputmethod/libs/"
+                "handwriting/keyboard/HandwritingOverlayView;->a:Landroid/graphics/Canvas;\n\n"
+                "    sget-object v1, Landroid/graphics/PorterDuff$Mode;->CLEAR:"
+                "Landroid/graphics/PorterDuff$Mode;\n\n"
+                "    invoke-virtual {v0, v6, v1}, Landroid/graphics/Canvas;->drawColor("
+                "ILandroid/graphics/PorterDuff$Mode;)V\n\n"
+                "    invoke-virtual {v0}, Landroid/graphics/Canvas;->restore()V"
+            ),
+        )
+        replace_once(
+            clear_path,
+            "    sget-object v5, Landroid/graphics/Region$Op;->REPLACE:"
+            "Landroid/graphics/Region$Op;\n\n"
+            "    move v2, v1\n\n"
+            "    invoke-virtual/range {v0 .. v5}, Landroid/graphics/Canvas;->clipRect("
+            "FFFFLandroid/graphics/Region$Op;)Z",
+            "    invoke-virtual {v0}, Landroid/graphics/Canvas;->save()I\n\n"
+            "    move v2, v1\n\n"
+            "    invoke-virtual/range {v0 .. v4}, Landroid/graphics/Canvas;->clipRect(FFFF)Z",
+        )
+
+    # Gesture trails already bracket their local clear with save/restore; only
+    # replace the prohibited operation there.
+    replace_exactly(
+        decoded / (
+            "smali/com/google/android/apps/inputmethod/libs/gestureui/"
+            "GestureOverlayView$a.smali"
+        ),
+        "Landroid/graphics/Region$Op;->REPLACE:Landroid/graphics/Region$Op;",
+        "Landroid/graphics/Region$Op;->INTERSECT:Landroid/graphics/Region$Op;",
+        1,
+    )
 
     # Always use the complete first-run page set. The old activation-only
     # branch produced two indicators, then restarted with four after IME select.
@@ -956,7 +999,7 @@ def apply(decoded: Path) -> None:
         raise RuntimeError(f"Refusing to overwrite existing helper: {candidate_dst}")
     shutil.copyfile(candidate_src, candidate_dst)
 
-    print(f"Applied compatibility v35 validated symbol pager fling patches to {decoded}")
+    print(f"Applied compatibility v36 handwriting Canvas patches to {decoded}")
 
 
 def main() -> None:

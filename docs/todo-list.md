@@ -42,7 +42,7 @@
 - [x] V30 交互期 Surface vote 真机无可感知改善；V31 已回滚所有帧率干预，恢复系统默认调度
 - [ ] target API 与渲染路径现代化后重新实现高刷新率支持
 - [x] 对照 Gboard 复核手写离屏 Bitmap/Canvas、down/move/up clip、save/restore、pressure 与 dirty-rect 路径
-- [ ] 决定冻结已验证手写补丁，或制作仅移除 deprecated Region.Op 并补齐清屏 save/restore 的小版本
+- [ ] 真机验证 V36 手写 Canvas 整理：首笔、连续多笔、多字识别、笔迹清除/淡出及候选上屏
 - [ ] 继续复核其他已修改功能
 
 ## 后续兼容性工作

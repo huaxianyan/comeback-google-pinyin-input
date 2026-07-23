@@ -40,7 +40,7 @@ Write-Host "[2/4] Applying compatibility patches..."
 & python (Join-Path $PSScriptRoot "apply_patches.py") $WorkDir
 if ($LASTEXITCODE -ne 0) { throw "patching failed" }
 
-$UnsignedApk = Join-Path $BuildDir "google-pinyin-4.5.2-a16-a17-compat-v32-pageable-touch-cancel-unsigned.apk"
+$UnsignedApk = Join-Path $BuildDir "google-pinyin-4.5.2-a16-a17-compat-v35-symbol-pager-fling-unsigned.apk"
 Write-Host "[3/4] Rebuilding APK..."
 & java -jar $ApktoolJar b -p $FrameworkDir -o $UnsignedApk $WorkDir
 if ($LASTEXITCODE -ne 0) { throw "apktool build failed" }

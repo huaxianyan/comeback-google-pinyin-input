@@ -1,5 +1,51 @@
 # Changelog
 
+## [0.29.0] - 2026-07-23
+
+对应 Compatibility v35 / versionCode `4520348`。
+
+### Changed
+
+- V34 真机确认全键盘符号/表情单指可轻松左右翻页，局部 velocity fling 修复通过。
+- 删除临时 `PagerDiagnosticsCompat`、`GPPagerDiag` 日志及 `lk` 中全部诊断调用；正式版只保留对 `PageableRecentSubCategorySoftKeyListHolderView` 验证通过的 legacy distance 门槛旁路。
+- V32 分页误选取消、慢速手势 50% settle、候选 pager、左侧竖向列表和其他 `lk` 使用者保持不变。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat35-symbol-pager-fling`。
+- APK 已成功重建、完成 zipalign 与 v1/v2/v3 签名校验，并覆盖安装到 Pixel 10 Pro；未执行功能测试。
+
+## [0.28.0] - 2026-07-23
+
+对应 Compatibility v34 / versionCode `4520347`。
+
+### Fixed
+
+- V33 的 30 次采样确认旧 `lk` final-delta distance 始终为 0，导致全键盘符号/表情的 fling 分支完全不可达；21 次回弹中有 16 次速度实际已超过系统 minimum。
+- 仅对 `PageableRecentSubCategorySoftKeyListHolderView` 跳过失效的 legacy 25dp final-delta 门槛，改为在已经进入 dragging 后按系统 minimum fling velocity 进入原有 fling 目标页逻辑。
+- 保留 paging touch slop、方向竞争、慢速手势 50% settle、target clamp、页码和 Scroller 动画；候选 pager 与其他共享 `lk` 的界面继续使用原双重门槛。
+- 保留 V33 日志一个验证周期，并修正 `result` 文本；诊断 tag 仍为 `GPPagerDiag`。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat34-symbol-pager-fling`。
+- APK 已成功重建、完成 zipalign 与 v1/v2/v3 签名校验，并覆盖安装到 Pixel 10 Pro；安装后已清空 Logcat，未执行功能测试。
+
+## [0.27.0] - 2026-07-23
+
+对应 Compatibility v33 / versionCode `4520346`，仅用于横向 pager 诊断。
+
+### Diagnostics
+
+- 新增 `PagerDiagnosticsCompat`，只记录 `PageableRecentSubCategorySoftKeyListHolderView` 在 UP 时已经计算完成的 current/target、页面 offset、拖动 distance、25dp threshold、velocity、minimum velocity 与 fling 判定。
+- 日志 tag 为 `GPPagerDiag`；候选 pager 和其他共享 `lk` 的界面通过类型检查排除。
+- 诊断调用不修改 `lk` 字段、MotionEvent、touch slop、velocity、settle、目标页或 Scroller 动画，V32 点击取消逻辑保持不变。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat33-pager-diagnostics`。
+- APK 已成功重建、完成 zipalign 与 v1/v2/v3 签名校验，并覆盖安装到 Pixel 10 Pro；安装后已清空 Logcat，未执行功能测试。
+
 ## [0.26.0] - 2026-07-23
 
 对应 Compatibility v32 / versionCode `4520345`。

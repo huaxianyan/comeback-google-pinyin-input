@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply the Android 16 compatibility v20 patch to apktool 2.12.1 output.
+"""Apply Android 16 compatibility v28 with stylesheet navigation colors.
 
 This script intentionally targets the unmodified Google Pinyin Input
 4.5.2.193126728 arm64-v8a APK. It aborts instead of guessing when an expected
@@ -46,8 +46,8 @@ def apply(decoded: Path) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520332\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat20",
+        "versionInfo:\n  versionCode: 4520341\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat28-stylesheet-nav-color",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -716,6 +716,10 @@ def apply(decoded: Path) -> None:
         "    invoke-static {p0}, Lcom/google/android/inputmethod/pinyin/FrameRateCompat;"
         "->apply(Lcom/google/android/apps/inputmethod/libs/framework/core/"
         "GoogleInputMethodService;)V\n\n"
+        "    # Present recent, non-sensitive clipboard text as a native candidate.\n"
+        "    invoke-static {p0, p1}, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "core/ClipboardCandidateCompat;->start(Lcom/google/android/apps/inputmethod/libs/"
+        "framework/core/GoogleInputMethodService;Landroid/view/inputmethod/EditorInfo;)V\n\n"
         "    .line 77",
     )
 
@@ -737,6 +741,150 @@ def apply(decoded: Path) -> None:
         "    goto/16 :goto_0",
     )
 
+    # Stop observing the clipboard as soon as the input view is no longer active.
+    replace_once(
+        pinyin_ime,
+        "    .line 96\n"
+        "    invoke-super {p0, p1}, Labp;->onFinishInputView(Z)V\n\n"
+        "    .line 98",
+        "    .line 96\n"
+        "    invoke-static {p0}, Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "ClipboardCandidateCompat;->stop(Lcom/google/android/apps/inputmethod/libs/"
+        "framework/core/GoogleInputMethodService;)V\n\n"
+        "    invoke-super {p0, p1}, Labp;->onFinishInputView(Z)V\n\n"
+        "    .line 98",
+    )
+
+    input_bundle = decoded / (
+        "smali/com/google/android/apps/inputmethod/libs/framework/core/InputBundle.smali"
+    )
+    # Intercept both candidate-selection paths before a custom payload can
+    # reach an HMM implementation that requires an Integer payload.
+    replace_once(
+        input_bundle,
+        "    iget-object v0, v4, Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "KeyData;->a:Ljava/lang/Object;\n\n"
+        "    check-cast v0, Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "Candidate;\n\n"
+        "    .line 256",
+        "    iget-object v0, v4, Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "KeyData;->a:Ljava/lang/Object;\n\n"
+        "    check-cast v0, Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "Candidate;\n\n"
+        "    invoke-static {p0, v0}, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "core/ClipboardCandidateCompat;->handleSelection(Lcom/google/android/apps/"
+        "inputmethod/libs/framework/core/InputBundle;Lcom/google/android/apps/inputmethod/"
+        "libs/framework/core/Candidate;)Z\n\n"
+        "    move-result v1\n\n"
+        "    if-eqz v1, :compat_not_clipboard_event\n\n"
+        "    move v0, v2\n\n"
+        "    goto/16 :goto_0\n\n"
+        "    :compat_not_clipboard_event\n"
+        "    .line 256",
+    )
+    # Decorate the first batch of every native candidate cycle. This keeps the
+    # clipboard item present when Chinese, English or handwriting candidates
+    # replace the initially displayed idle candidate, without duplicating it in
+    # later pagination batches.
+    replace_once(
+        input_bundle,
+        "    .prologue\n"
+        "    .line 549\n"
+        "    iget v0, p0, Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "InputBundle;->b:I",
+        "    .prologue\n"
+        "    invoke-static {p1}, Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "ClipboardCandidateCompat;->decorateCandidates(Ljava/util/List;)Ljava/util/List;\n\n"
+        "    move-result-object p1\n\n"
+        "    .line 549\n"
+        "    iget v0, p0, Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "InputBundle;->b:I",
+    )
+    replace_once(
+        input_bundle,
+        "    .prologue\n"
+        "    .line 545\n"
+        "    const/4 v0, 0x0",
+        "    .prologue\n"
+        "    invoke-static {}, Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "ClipboardCandidateCompat;->candidatesUpdated()V\n\n"
+        "    .line 545\n"
+        "    const/4 v0, 0x0",
+    )
+
+    fixed_candidates = decoded / (
+        "smali/com/google/android/apps/inputmethod/libs/framework/keyboard/widget/"
+        "FixedSizeCandidatesHolderView.smali"
+    )
+    replace_once(
+        fixed_candidates,
+        ".method public appendCandidates(Ljava/util/List;)I\n    .locals 11",
+        ".method public appendCandidates(Ljava/util/List;)I\n    .locals 12",
+    )
+    replace_once(
+        fixed_candidates,
+        "    iget-object v9, p0, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "keyboard/widget/FixedSizeCandidatesHolderView;->a:Lavp;\n\n"
+        "    iget v10, p0, Lcom/google/android/apps/inputmethod/libs/framework/keyboard/"
+        "widget/FixedSizeCandidatesHolderView;->c:I\n\n"
+        "    .line 62",
+        "    move-object v11, v5\n\n"
+        "    iget-object v9, p0, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "keyboard/widget/FixedSizeCandidatesHolderView;->a:Lavp;\n\n"
+        "    iget v10, p0, Lcom/google/android/apps/inputmethod/libs/framework/keyboard/"
+        "widget/FixedSizeCandidatesHolderView;->c:I\n\n"
+        "    .line 62",
+    )
+    replace_once(
+        fixed_candidates,
+        "    invoke-virtual {v4, v5, v2}, Lcom/google/android/apps/inputmethod/libs/"
+        "framework/keyboard/SoftKeyView;->a(IZ)V\n\n"
+        "    .line 70",
+        "    invoke-virtual {v4, v5, v2}, Lcom/google/android/apps/inputmethod/libs/"
+        "framework/keyboard/SoftKeyView;->a(IZ)V\n\n"
+        "    invoke-static {v4, v11}, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "core/ClipboardCandidateCompat;->decorateView(Lcom/google/android/apps/inputmethod/"
+        "libs/framework/keyboard/SoftKeyView;Lcom/google/android/apps/inputmethod/libs/"
+        "framework/core/Candidate;)V\n\n"
+        "    .line 70",
+    )
+    replace_once(
+        fixed_candidates,
+        "    .line 135\n"
+        "    :cond_16\n"
+        "    iget v0, p0, Lcom/google/android/apps/inputmethod/libs/framework/keyboard/"
+        "widget/FixedSizeCandidatesHolderView;->c:I",
+        "    .line 135\n"
+        "    :cond_16\n"
+        "    invoke-static {p0}, Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "ClipboardCandidateCompat;->centerSingleClipboardCandidate(Lcom/google/android/"
+        "apps/inputmethod/libs/framework/keyboard/widget/"
+        "FixedSizeCandidatesHolderView;)V\n\n"
+        "    iget v0, p0, Lcom/google/android/apps/inputmethod/libs/framework/keyboard/"
+        "widget/FixedSizeCandidatesHolderView;->c:I",
+    )
+    replace_once(
+        input_bundle,
+        ".method public selectTextCandidate(Lcom/google/android/apps/inputmethod/libs/"
+        "framework/core/Candidate;Z)V\n"
+        "    .locals 4\n\n"
+        "    .prologue\n"
+        "    const/4 v3, 0x0\n\n"
+        "    .line 502",
+        ".method public selectTextCandidate(Lcom/google/android/apps/inputmethod/libs/"
+        "framework/core/Candidate;Z)V\n"
+        "    .locals 4\n\n"
+        "    .prologue\n"
+        "    const/4 v3, 0x0\n\n"
+        "    invoke-static {p0, p1}, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "core/ClipboardCandidateCompat;->handleSelection(Lcom/google/android/apps/"
+        "inputmethod/libs/framework/core/InputBundle;Lcom/google/android/apps/inputmethod/"
+        "libs/framework/core/Candidate;)Z\n\n"
+        "    move-result v0\n\n"
+        "    if-nez v0, :cond_3\n\n"
+        "    .line 502",
+    )
+
     for helper_name in (
         "NavigationBarCompat.smali",
         "FrameRateCompat.smali",
@@ -750,7 +898,16 @@ def apply(decoded: Path) -> None:
         helper_dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(helper_src, helper_dst)
 
-    print(f"Applied compatibility v20 patches to {decoded}")
+    candidate_src = ROOT / "patches/smali/ClipboardCandidateCompat.smali"
+    candidate_dst = decoded / (
+        "smali/com/google/android/apps/inputmethod/libs/framework/core/"
+        "ClipboardCandidateCompat.smali"
+    )
+    if candidate_dst.exists():
+        raise RuntimeError(f"Refusing to overwrite existing helper: {candidate_dst}")
+    shutil.copyfile(candidate_src, candidate_dst)
+
+    print(f"Applied compatibility v28 stylesheet navigation color patches to {decoded}")
 
 
 def main() -> None:

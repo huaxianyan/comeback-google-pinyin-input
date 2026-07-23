@@ -1,5 +1,133 @@
 # Changelog
 
+## [0.22.0] - 2026-07-23
+
+对应 Compatibility v28 / versionCode `4520341`。
+
+### Fixed
+
+- 根据 V27 真机主题切换结果，确认所有主题仍进入原有浅/深 fallback。
+- 定位原因：Google 拼音 stylesheet 通过自定义 `bam` Drawable 包装原背景，并把最终主题 tint 保存在公开 `ColorStateList` 中；读取包装内部的基础 `GradientDrawable` 无法获得最终颜色。
+- `NavigationBarCompat` 现在优先识别 `bam`，按 Drawable 当前 state 从其 `ColorStateList` 读取真实颜色，再回退到 Android 标准 Drawable 和主题名称路径。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat28-stylesheet-nav-color`。
+- APK 已成功重建、完成 zipalign 与 v1/v2/v3 签名校验，并覆盖安装到 Pixel 10 Pro；未执行功能测试。
+
+## [0.21.0] - 2026-07-23
+
+对应 Compatibility v27 / versionCode `4520340`。
+
+### Changed
+
+- `NavigationBarCompat` 不再优先通过 theme cache key 猜测浅色或深色，而是读取当前 `keyboard_body_view_holder` 中已经完成 stylesheet 渲染的键盘 body 背景色。
+- body 在早期生命周期或切换过程中暂不可用时，继续尝试读取 `keyboard_area` 的最终背景色；只有无法得到 alpha 255 的 surface 时才回退到 V26 的名称判断和内置浅/深颜色。
+- 支持从 `ColorDrawable`、`GradientDrawable`、`LayerDrawable` 和当前 `DrawableContainer` 状态中提取颜色，因此可覆盖内置 shape、layer-list 及额外主题 selector。
+- 虚拟导航键明暗改为根据实际 surface 的加权亮度计算，不再由主题名称直接决定。
+- 本阶段不改变 divider、WindowInsets、三键/手势模式和 contrast enforcement，降低基础重构范围。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat27-rendered-nav-surface`。
+- APK 已成功重建、完成 zipalign 与 v1/v2/v3 签名校验，并覆盖安装到 Pixel 10 Pro；未执行功能测试。
+
+## [0.20.0] - 2026-07-22
+
+对应 Compatibility v26 / versionCode `4520339`。
+
+### Fixed
+
+- 修正 V25 在亮色键盘中直接使用深色候选文字 RGB 生成 chip 背景，导致整体明显偏暗的问题。
+- 根据 Gboard 二进制 stylesheet 的实际规则实现亮暗表面：亮色键盘使用约 `#4CFFFFFF` 的白色 surface 叠加，暗色键盘使用约 `#1AFFFFFF`，不再使用文字色作为背景色。
+- 描边降为亮色主题下约 9% 黑色、暗色主题下约 15% 白色，elevation 从 3dp 降到 2dp并移除额外 translationZ，避免阴影过重。
+- 按 Gboard 紧凑 AutoPaste chip 参数调整为 34dp 高、14sp 文本、20dp 图标和 1000dp 完全胶囊圆角。
+
+### Research
+
+- 确认 Gboard chip XML 使用白色 pill shape 作为 ripple background/mask，实际颜色由 `.bg-chip-item-suggestion` stylesheet tag 重写；亮色默认映射到 bordered-key surface，而不是半透明黑色。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat26-gboard-light-chip`。
+- APK 已成功重建、完成 zipalign 与 v1/v2/v3 签名校验，并覆盖安装到 Pixel 10 Pro；未执行功能测试。
+
+## [0.19.0] - 2026-07-22
+
+对应 Compatibility v25 / versionCode `4520338`。
+
+### Changed
+
+- 完整移除 4–8 位验证码正则及提取分支；剪贴板候选现在始终忠实提交完整原文，仅屏幕摘要保留 18 字符加 `...` 的视觉截断。
+- 将 clipboard chip 的主题色填充透明度由约 9% 提升到约 19%，描边透明度提升到约 44%，增强与底层候选栏的层次差异。
+- 为圆角 chip 增加 3dp elevation、1dp translationZ 和平台圆角 outline 阴影，使其呈现更接近 Material 按钮的凸起质感。
+- 候选 View 回收时同步清除 elevation 和 translationZ，避免普通候选继承阴影。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat25-raised-clipboard-chip`。
+- APK 已成功重建、完成 zipalign 与 v1/v2/v3 签名校验，并覆盖安装到 Pixel 10 Pro；未执行功能测试。
+
+## [0.18.0] - 2026-07-22
+
+对应 Compatibility v24 / versionCode `4520337`。
+
+### Fixed
+
+- 修复仅将 chip 内部文字设为居中、但单个候选 `SoftKeyView` 仍停靠候选栏左侧的问题：当候选栏中只有剪贴板 chip 时，将整个候选项组水平居中；出现普通候选后恢复原生起始对齐。
+- 修复 `AutoSizeTextView` 接收 `16sp` 原始数值后错误计算最小字号比例，导致文字异常放大并被 chip 高度裁切的问题；现在先按 `scaledDensity` 转换为真实像素，再交给旧版自动缩放实现。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat24-centered-clipboard-chip`。
+- APK 已成功重建、完成 zipalign 与 v1/v2/v3 签名校验，并覆盖安装到 Pixel 10 Pro；未执行功能测试。
+
+## [0.17.0] - 2026-07-22
+
+对应 Compatibility v23 / versionCode `4520336`。
+
+### Changed
+
+- 剪贴板候选的长文本摘要改为最多显示开头 18 个字符，并使用三个点 `...` 结尾；提交内容仍保持完整。
+- 参考 Gboard AutoPaste chip，将剪贴板候选改为单行垂直/水平居中布局、16sp 文本、36dp 最小高度和更紧凑的内边距。
+- 在内容外增加随键盘文字颜色变化的半透明圆角填充与描边，并隐藏该项的原生候选分隔线。
+- 将剪贴板图标固定为 16dp，放置在文本前并保留 8dp 间距。
+- 候选 View 回收时恢复原生背景、字号、padding、分隔线和 drawable，避免普通候选继承 clipboard chip 样式。
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat23-clipboard-chip`。
+
+### Build
+
+- V23 APK 已成功重建，通过 zipalign 和 v1/v2/v3 签名校验，并覆盖安装到 Pixel 10 Pro。
+- 按约定未执行功能测试，视觉效果由项目维护者真机验证。
+
+## [0.16.0] - 2026-07-22
+
+对应 Compatibility v22 / versionCode `4520335`。
+
+### Added
+
+- 将已通过真机最小验证的原生候选栏方案接入系统剪贴板：输入视图启动时读取最近两分钟内的纯文本剪贴板，并在剪贴板变化时刷新候选 model。
+- 对 4–8 位独立数字自动提取验证码；其他文本显示并提交原始内容，过长显示文本会截断但不改变提交内容。
+- 剪贴板候选参与每轮拼音、英文和手写候选更新，使用原生 `Candidate`、`SoftKeyView`、键盘主题、触摸及可访问性路径。
+
+### Privacy
+
+- 密码、可见密码、网页密码和数字密码输入框不读取或展示剪贴板候选。
+- 支持应用通过 `privateImeOptions=disableAutoPaste` 禁用建议，并忽略标记为 `android.content.extra.IS_SENSITIVE` 的剪贴板及非文本内容。
+- 仅在输入视图活动期间注册剪贴板监听器；输入视图结束后立即移除监听并清理当前候选。
+- 点击后的同一条剪贴板内容在进程生命周期内不再重复建议。
+
+### Changed
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat22-clipboard-candidate`。
+- 编码代理继续负责 APK 构建、签名和安装；功能验证及回归测试统一由项目维护者执行。
+
+### Testing
+
+- 原生候选栏静态原型已由项目维护者验证：位置正确、点击可上屏，并可在英文与手写笔画模式正常工作。
+- V22 APK 已成功重建，通过 zipalign 和 v1/v2/v3 签名校验，并覆盖安装到 Pixel 10 Pro。
+- 动态剪贴板读取、验证码提取、候选合并和隐私过滤尚待项目维护者真机验证。
+
 ## [0.15.0] - 2026-07-21
 
 对应 Compatibility v20 / versionCode `4520332`。

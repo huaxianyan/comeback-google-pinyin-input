@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.31.0] - 2026-07-23
+
+对应 Compatibility v37 / versionCode `4520350`，用于首次使用引导专项验证。
+
+### Changed
+
+- 对照当前 Gboard 的标准三页数组，将首次使用流程固定为“启用输入法 → 选择输入法 → 完成”，不再显示旧权限总览页或匿名指标页。
+- 保留旧框架从系统设置/输入法选择器返回后的状态刷新、自动推进、PageIndicator、完成按钮和 `finishAndRemoveTask()` 行为。
+- 构建脚本新增可选 application ID；正式默认仍为 `com.google.android.inputmethod.pinyin.compat`，本次测试包使用独立的 `com.google.android.inputmethod.pinyin.guideaudit`，并同步隔离用户词典 authority 和应用数据。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat37-first-run-audit`。
+- APK 已成功重建，通过 zipalign 与 v1/v2/v3 签名校验，并以独立包名安装到 Pixel 10 Pro；原 V36 compatibility 包仍保持安装且版本不变。
+- 未执行引导功能或视觉测试，验证由项目维护者完成。
+
 ## [0.30.0] - 2026-07-23
 
 对应 Compatibility v36 / versionCode `4520349`。

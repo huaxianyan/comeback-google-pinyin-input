@@ -6,7 +6,8 @@ param(
     [Parameter(Mandatory = $true)][string]$Keystore,
     [Parameter(Mandatory = $true)][string]$KeyAlias,
     [Parameter(Mandatory = $true)][string]$StorePassword,
-    [Parameter(Mandatory = $true)][string]$KeyPassword
+    [Parameter(Mandatory = $true)][string]$KeyPassword,
+    [string]$ApplicationId = "com.google.android.inputmethod.pinyin.compat"
 )
 
 $ErrorActionPreference = "Stop"
@@ -37,10 +38,10 @@ Write-Host "[1/4] Decoding original APK..."
 if ($LASTEXITCODE -ne 0) { throw "apktool decode failed" }
 
 Write-Host "[2/4] Applying compatibility patches..."
-& python (Join-Path $PSScriptRoot "apply_patches.py") $WorkDir
+& python (Join-Path $PSScriptRoot "apply_patches.py") $WorkDir --application-id $ApplicationId
 if ($LASTEXITCODE -ne 0) { throw "patching failed" }
 
-$UnsignedApk = Join-Path $BuildDir "google-pinyin-4.5.2-a16-a17-compat-v36-handwriting-canvas-unsigned.apk"
+$UnsignedApk = Join-Path $BuildDir "google-pinyin-4.5.2-a16-a17-compat-v37-first-run-audit-unsigned.apk"
 Write-Host "[3/4] Rebuilding APK..."
 & java -jar $ApktoolJar b -p $FrameworkDir -o $UnsignedApk $WorkDir
 if ($LASTEXITCODE -ne 0) { throw "apktool build failed" }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply Android 16 compatibility v35 with validated symbol pager fling repair.
+"""Apply Android 16/17 compatibility patches to Google Pinyin 4.5.2.
 
 This script intentionally targets the unmodified Google Pinyin Input
 4.5.2.193126728 arm64-v8a APK. It aborts instead of guessing when an expected
@@ -32,7 +32,7 @@ def replace_exactly(path: Path, old: str, new: str, expected: int) -> None:
     path.write_text(text.replace(old, new), encoding="utf-8", newline="\n")
 
 
-def apply(decoded: Path) -> None:
+def apply(decoded: Path, application_id: str) -> None:
     if not (decoded / "apktool.yml").is_file():
         raise RuntimeError(f"Not an apktool output directory: {decoded}")
 
@@ -46,8 +46,8 @@ def apply(decoded: Path) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520349\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat36-handwriting-canvas",
+        "versionInfo:\n  versionCode: 4520350\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat37-first-run-audit",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -56,7 +56,6 @@ def apply(decoded: Path) -> None:
         "        <item>@layout/first_run_page_permission</item>\n"
         "        <item>@layout/first_run_page_setup_user_metrics</item>\n"
         "        <item>@layout/first_run_page_done</item>",
-        "        <item>@layout/first_run_page_permission</item>\n"
         "        <item>@layout/first_run_page_done</item>",
     )
     replace_once(
@@ -182,8 +181,9 @@ def apply(decoded: Path) -> None:
         1,
     )
 
-    # Always use the complete first-run page set. The old activation-only
-    # branch produced two indicators, then restarted with four after IME select.
+    # Keep a stable three-step flow: enable, select, done. Current Gboard no
+    # longer includes its legacy permission or user-metrics pages in the normal
+    # first-run array; capabilities request permission only when actually used.
     first_run_activity = decoded / (
         "smali/com/google/android/apps/inputmethod/pinyin/firstrun/"
         "PinyinFirstRunActivity.smali"
@@ -250,17 +250,6 @@ def apply(decoded: Path) -> None:
     .locals 1
 
     .prologue
-    iget-object v0, p0, Lapy;->a:[Ljava/lang/String;
-
-    array-length v0, v0
-
-    if-lez v0, :without_permission
-
-    const v0, 0x7f0a0018
-
-    return v0
-
-    :without_permission
     const v0, 0x7f0a0019
 
     return v0
@@ -734,22 +723,22 @@ def apply(decoded: Path) -> None:
     replace_once(
         manifest,
         'package="com.google.android.inputmethod.pinyin"',
-        'package="com.google.android.inputmethod.pinyin.compat"',
+        f'package="{application_id}"',
     )
     replace_once(
         manifest,
         'android:authorities="com.google.android.inputmethod.pinyin.user_dictionary"',
-        'android:authorities="com.google.android.inputmethod.pinyin.compat.user_dictionary"',
+        f'android:authorities="{application_id}.user_dictionary"',
     )
     replace_once(
         decoded / "res/values/strings.xml",
         '<string name="user_dictionary_authority">com.google.android.inputmethod.pinyin.user_dictionary</string>',
-        '<string name="user_dictionary_authority">com.google.android.inputmethod.pinyin.compat.user_dictionary</string>',
+        f'<string name="user_dictionary_authority">{application_id}.user_dictionary</string>',
     )
     replace_once(
         decoded / "smali/ayn.smali",
         '    const-string v2, "com.google.android.inputmethod.pinyin"',
-        '    const-string v2, "com.google.android.inputmethod.pinyin.compat"',
+        f'    const-string v2, "{application_id}"',
     )
 
     for obsolete_component in (
@@ -999,14 +988,19 @@ def apply(decoded: Path) -> None:
         raise RuntimeError(f"Refusing to overwrite existing helper: {candidate_dst}")
     shutil.copyfile(candidate_src, candidate_dst)
 
-    print(f"Applied compatibility v36 handwriting Canvas patches to {decoded}")
+    print(f"Applied compatibility v37 first-run audit patches to {decoded} ({application_id})")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("decoded", type=Path, help="apktool decoded directory")
+    parser.add_argument(
+        "--application-id",
+        default="com.google.android.inputmethod.pinyin.compat",
+        help="application ID for coexistence builds",
+    )
     args = parser.parse_args()
-    apply(args.decoded.resolve())
+    apply(args.decoded.resolve(), args.application_id)
 
 
 if __name__ == "__main__":

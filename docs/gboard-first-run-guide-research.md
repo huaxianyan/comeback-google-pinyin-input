@@ -150,6 +150,21 @@ com.google.android.inputmethod.pinyin.guideaudit
 
 因此安装测试版不会覆盖 V36，也不会复用 V36 的首次启动完成状态或用户词典。系统“已启用输入法/当前输入法”是设备级状态，测试过程中选择测试输入法会临时改变系统当前输入法，但不会修改 V36 的应用数据。
 
+## V37 真机反馈与 V38 修正
+
+V37 的启用、选择和完成三步基本功能正常，但真机发现三项问题：
+
+1. 已完成状态同时显示外层容器、圆形 check 背景和勾号，形成多余的双层底色；
+2. 完成和返回只调用 `finishAndRemoveTask()` 仍会露出启动引导的应用设置页；返回键也缺少逐页后退；
+3. 暗色模式指示器需要更明确的“当前页亮、其他页暗”层级。
+
+V38 对应调整：
+
+- 删除 check 自身的圆形 background，保留 24dp 勾号并按 `onPrimaryContainer` 着色，直接放在外层完成容器上；
+- 返回键读取当前 `BidiViewPager` 页码：大于 0 时调用原生 pager 返回前一页，第一页才退出；
+- 新增统一 `exitGuide()`：先启动 `ACTION_MAIN + CATEGORY_HOME`，再 `finishAndRemoveTask()`，确保完成或退出后显示桌面而不是应用设置；
+- 指示器不再复用 primary/outline，改用独立 day/night 色。暗色 selected 为 `#E8F0FE`，unselected 为 `#5F6368`。
+
 ## 待验证项目
 
 1. 新测试包首次打开直接显示三枚指示器；
@@ -160,7 +175,7 @@ com.google.android.inputmethod.pinyin.guideaudit
 6. 全程页数不从 2 跳为 3/4；
 7. 不出现权限总览页或匿名指标页；
 8. 浅色和深色模式下标题、说明、按钮、完成状态和系统栏可读；
-9. 完成按钮直接关闭任务；
-10. 重新打开时不暴露旧功能介绍页或设置页；
-11. 系统返回键直接关闭整个引导任务；
+9. 完成按钮直接退出到桌面；
+10. 完成或第一页返回时不暴露旧功能介绍页或设置页；
+11. 第二/第三页按返回键回到前一页，第一页按返回键才退出到桌面；
 12. 已安装的 `com.google.android.inputmethod.pinyin.compat` V36 数据和版本保持不变。

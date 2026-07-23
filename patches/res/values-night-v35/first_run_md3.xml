@@ -9,6 +9,8 @@
     <color name="first_run_md3_on_surface">#FFE2E2E9</color>
     <color name="first_run_md3_on_surface_variant">#FFC4C6D0</color>
     <color name="first_run_md3_outline">#FF8E9099</color>
+    <color name="first_run_md3_indicator_selected">#FFE8F0FE</color>
+    <color name="first_run_md3_indicator_unselected">#FF5F6368</color>
 
     <style name="AppThemeSelector.NoTitle" parent="@android:style/Theme.Material.NoActionBar">
         <item name="android:fontFamily">sans</item>

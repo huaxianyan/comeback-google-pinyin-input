@@ -9,6 +9,8 @@
     <color name="first_run_md3_on_surface">#FF1A1B20</color>
     <color name="first_run_md3_on_surface_variant">#FF44474F</color>
     <color name="first_run_md3_outline">#FF74777F</color>
+    <color name="first_run_md3_indicator_selected">#FF0B57D0</color>
+    <color name="first_run_md3_indicator_unselected">#FFB7BBC4</color>
 
     <dimen name="first_run_page_button_font_size">14sp</dimen>
     <dimen name="first_run_page_button_padding_top">32dp</dimen>
@@ -113,11 +115,11 @@
         <item name="android:layout_marginTop">@dimen/first_run_page_settings_done_padding_top</item>
     </style>
     <style name="FirstRunPageSettingsDoneCheck">
-        <item name="android:background">@drawable/bg_first_run_md3_done_check</item>
-        <item name="android:padding">5dp</item>
+        <item name="android:padding">2dp</item>
         <item name="android:layout_width">24dp</item>
         <item name="android:layout_height">24dp</item>
         <item name="android:src">@drawable/ic_first_run_finished_check</item>
+        <item name="android:tint">@color/first_run_md3_on_primary_container</item>
         <item name="android:scaleType">centerInside</item>
     </style>
     <style name="FirstRunPageSettingsDoneText">

@@ -46,8 +46,8 @@ def apply(decoded: Path, application_id: str) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520350\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat37-first-run-audit",
+        "versionInfo:\n  versionCode: 4520351\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat38-first-run-navigation",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -258,22 +258,53 @@ def apply(decoded: Path, application_id: str) -> None:
     replace_once(
         first_run_activity,
         "\n\n# virtual methods\n.method protected final a()I",
-        "\n\n# virtual methods\n.method public onBackPressed()V\n"
-        "    .locals 0\n\n"
+        "\n\n# virtual methods\n.method public final exitGuide()V\n"
+        "    .locals 2\n\n"
+        "    new-instance v0, Landroid/content/Intent;\n\n"
+        "    const-string v1, \"android.intent.action.MAIN\"\n\n"
+        "    invoke-direct {v0, v1}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V\n\n"
+        "    const-string v1, \"android.intent.category.HOME\"\n\n"
+        "    invoke-virtual {v0, v1}, Landroid/content/Intent;->addCategory("
+        "Ljava/lang/String;)Landroid/content/Intent;\n\n"
+        "    const/high16 v1, 0x14000000\n\n"
+        "    invoke-virtual {v0, v1}, Landroid/content/Intent;->addFlags(I)"
+        "Landroid/content/Intent;\n\n"
+        "    invoke-virtual {p0, v0}, Lcom/google/android/apps/inputmethod/pinyin/"
+        "firstrun/PinyinFirstRunActivity;->startActivity(Landroid/content/Intent;)V\n\n"
         "    invoke-virtual {p0}, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
         "PinyinFirstRunActivity;->finishAndRemoveTask()V\n\n"
+        "    return-void\n"
+        ".end method\n\n"
+        ".method public onBackPressed()V\n"
+        "    .locals 2\n\n"
+        "    iget-object v0, p0, Lapy;->a:Lcom/google/android/apps/inputmethod/libs/"
+        "framework/keyboard/widget/BidiViewPager;\n\n"
+        "    invoke-virtual {v0}, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "keyboard/widget/BidiViewPager;->a()I\n\n"
+        "    move-result v1\n\n"
+        "    if-lez v1, :exit_guide\n\n"
+        "    add-int/lit8 v1, v1, -0x1\n\n"
+        "    invoke-virtual {v0, v1}, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "keyboard/widget/BidiViewPager;->b(I)V\n\n"
+        "    return-void\n\n"
+        "    :exit_guide\n"
+        "    invoke-virtual {p0}, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
+        "PinyinFirstRunActivity;->exitGuide()V\n\n"
         "    return-void\n"
         ".end method\n\n"
         ".method protected final a()I",
     )
 
-    # Closing or pressing Back must remove the setup task instead of revealing
-    # the legacy settings activity that launched the first-run screen.
+    # Completion/close must explicitly bring Home forward before removing the
+    # setup task; finishAndRemoveTask alone can reveal its launcher settings.
     for listener in ("smali/aqb.smali", "smali/aqe.smali"):
         replace_once(
             decoded / listener,
             "    invoke-virtual {v0}, Lapy;->finish()V",
-            "    invoke-virtual {v0}, Lapy;->finishAndRemoveTask()V",
+            "    check-cast v0, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
+            "PinyinFirstRunActivity;\n\n"
+            "    invoke-virtual {v0}, Lcom/google/android/apps/inputmethod/pinyin/"
+            "firstrun/PinyinFirstRunActivity;->exitGuide()V",
         )
 
     # The left list scrolls correctly, but its original starting SoftKey is
@@ -988,7 +1019,7 @@ def apply(decoded: Path, application_id: str) -> None:
         raise RuntimeError(f"Refusing to overwrite existing helper: {candidate_dst}")
     shutil.copyfile(candidate_src, candidate_dst)
 
-    print(f"Applied compatibility v37 first-run audit patches to {decoded} ({application_id})")
+    print(f"Applied compatibility v38 first-run navigation patches to {decoded} ({application_id})")
 
 
 def main() -> None:

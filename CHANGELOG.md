@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.32.0] - 2026-07-23
+
+对应 Compatibility v38 / versionCode `4520351`，继续使用独立 guideaudit 包验证首次引导。
+
+### Fixed
+
+- 移除步骤完成状态中勾号背后的第二层圆形底色，改为直接在外层完成容器上显示随明暗主题着色的勾号。
+- 系统返回键在第二、第三页时返回前一页，仅在第一页退出；不再从任意页面直接关闭引导。
+- 完成或从第一页退出时先显式返回桌面，再移除引导任务，避免重新露出启动引导的应用设置页面。
+- 为指示器增加独立的明暗主题颜色；暗色模式当前页使用浅色，其他页使用明显更暗的灰色，不再复用按钮 primary/outline 色。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat38-first-run-navigation`。
+- APK 已成功重建，通过 zipalign 与 v1/v2/v3 签名校验，并覆盖安装独立的 `com.google.android.inputmethod.pinyin.guideaudit` 测试包；未执行功能或视觉测试。
+
 ## [0.31.0] - 2026-07-23
 
 对应 Compatibility v37 / versionCode `4520350`，用于首次使用引导专项验证。

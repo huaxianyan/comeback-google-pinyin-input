@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply Android 16 compatibility v28 with stylesheet navigation colors.
+"""Apply Android 16 compatibility v29 with dynamic IME frame-rate boost.
 
 This script intentionally targets the unmodified Google Pinyin Input
 4.5.2.193126728 arm64-v8a APK. It aborts instead of guessing when an expected
@@ -46,8 +46,8 @@ def apply(decoded: Path) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520341\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat28-stylesheet-nav-color",
+        "versionInfo:\n  versionCode: 4520342\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat29-dynamic-frame-rate",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -712,7 +712,7 @@ def apply(decoded: Path) -> None:
         "    invoke-static {p0}, Lcom/google/android/inputmethod/pinyin/NavigationBarCompat;"
         "->apply(Lcom/google/android/apps/inputmethod/libs/framework/core/"
         "GoogleInputMethodService;)V\n\n"
-        "    # Ask modern variable-refresh displays to animate the IME at 120 Hz.\n"
+        "    # Let Android boost refresh rate only while the IME is touched.\n"
         "    invoke-static {p0}, Lcom/google/android/inputmethod/pinyin/FrameRateCompat;"
         "->apply(Lcom/google/android/apps/inputmethod/libs/framework/core/"
         "GoogleInputMethodService;)V\n\n"
@@ -751,6 +751,10 @@ def apply(decoded: Path) -> None:
         "    invoke-static {p0}, Lcom/google/android/apps/inputmethod/libs/framework/core/"
         "ClipboardCandidateCompat;->stop(Lcom/google/android/apps/inputmethod/libs/"
         "framework/core/GoogleInputMethodService;)V\n\n"
+        "    # Release touch boost and every legacy fixed frame-rate vote.\n"
+        "    invoke-static {p0}, Lcom/google/android/inputmethod/pinyin/FrameRateCompat;"
+        "->clear(Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "GoogleInputMethodService;)V\n\n"
         "    invoke-super {p0, p1}, Labp;->onFinishInputView(Z)V\n\n"
         "    .line 98",
     )
@@ -907,7 +911,7 @@ def apply(decoded: Path) -> None:
         raise RuntimeError(f"Refusing to overwrite existing helper: {candidate_dst}")
     shutil.copyfile(candidate_src, candidate_dst)
 
-    print(f"Applied compatibility v28 stylesheet navigation color patches to {decoded}")
+    print(f"Applied compatibility v29 dynamic frame-rate patches to {decoded}")
 
 
 def main() -> None:

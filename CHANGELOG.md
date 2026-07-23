@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.23.0] - 2026-07-23
+
+对应 Compatibility v29 / versionCode `4520342`。
+
+### Fixed
+
+- 移除 IME Window `preferredRefreshRate=120` 和 decor view `setFrameRate(120, DEFAULT)` 两条固定高刷新率请求，避免键盘可见但空闲时阻止 LTPO/ARR 降频。
+- API 35+ 改用当前 Gboard 使用的 `Window.setFrameRateBoostOnTouchEnabled(true)`，让系统只在触摸交互期间提升刷新率。
+- 新增 `FrameRateCompat.clear()`，在 `onFinishInputView()` 中关闭 touch boost，并将 Window/View 的遗留 frame-rate vote 清为 0。
+- Android 30–34 不再写死 120Hz，由系统默认策略选择适合设备的刷新率；90Hz、120Hz、144Hz 屏幕不再被统一映射到固定值。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat29-dynamic-frame-rate`。
+- APK 已成功重建、完成 zipalign 与 v1/v2/v3 签名校验，并覆盖安装到 Pixel 10 Pro；未执行功能测试。
+
 ## [0.22.0] - 2026-07-23
 
 对应 Compatibility v28 / versionCode `4520341`。

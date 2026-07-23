@@ -34,6 +34,8 @@
 - [ ] 分别设计三键导航、手势导航、浮动键盘和 bottom frame 的兼容策略
 - [x] 对照 Gboard 复核固定 120Hz 请求、触摸 boost、内容速度提示和设备 ARR 能力
 - [x] V29 移除固定 120Hz Window/View vote，API 35+ 改用触摸动态 boost，并在 `onFinishInputView()` 对称释放
+- [x] V30 交互期 Surface vote 真机无可感知改善；V31 已回滚所有帧率干预，恢复系统默认调度
+- [ ] target API 与渲染路径现代化后重新实现高刷新率支持
 - [ ] 继续复核其他已修改功能
 
 ## 后续兼容性工作

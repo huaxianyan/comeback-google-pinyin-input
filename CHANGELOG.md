@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.27.0] - 2026-07-23
+
+对应 Compatibility v33 / versionCode `4520346`，仅用于横向 pager 诊断。
+
+### Diagnostics
+
+- 新增 `PagerDiagnosticsCompat`，只记录 `PageableRecentSubCategorySoftKeyListHolderView` 在 UP 时已经计算完成的 current/target、页面 offset、拖动 distance、25dp threshold、velocity、minimum velocity 与 fling 判定。
+- 日志 tag 为 `GPPagerDiag`；候选 pager 和其他共享 `lk` 的界面通过类型检查排除。
+- 诊断调用不修改 `lk` 字段、MotionEvent、touch slop、velocity、settle、目标页或 Scroller 动画，V32 点击取消逻辑保持不变。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat33-pager-diagnostics`。
+- APK 已成功重建、完成 zipalign 与 v1/v2/v3 签名校验，并覆盖安装到 Pixel 10 Pro；安装后已清空 Logcat，未执行功能测试。
+
 ## [0.26.0] - 2026-07-23
 
 对应 Compatibility v32 / versionCode `4520345`。

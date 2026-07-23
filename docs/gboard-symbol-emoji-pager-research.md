@@ -161,3 +161,15 @@ Gboard 中仍保留的旧候选 pager `ckq` 可以看到与 `lk` 相同的：
 - 若两者都不足且偏移常在 35%–50%：才考虑局部降低 settle 阈值。
 
 这样可以避免凭手感猜常量，也避免影响已经通过 V32 验证的点击取消与候选分页。
+
+## V33 诊断版
+
+V33 已实现上述无行为修改的诊断：
+
+- 只在 `lk` 的 UP 目标页计算路径插入只读调用；
+- `PagerDiagnosticsCompat` 通过 `instanceof PageableRecentSubCategorySoftKeyListHolderView` 排除候选 pager 和其他 `lk` 使用者；
+- 不修改任何 `lk` 字段、MotionEvent、阈值、velocity、target 或 Scroller 调用；
+- 日志 tag 为 `GPPagerDiag`；
+- 每次有效拖动松手记录 current、target、changed、offset、distance、25dp threshold、velocity、minimum velocity、fling 与最终 page/snap_back。
+
+APK 安装后已清空 Logcat。维护者需要在全键盘符号/表情界面分别复现数次成功翻页和回弹，然后由编码代理读取 `GPPagerDiag` 数据。

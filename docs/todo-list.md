@@ -32,6 +32,8 @@
 - [x] V28 读取 `bam` 当前 state 的最终 `ColorStateList`，主题名称与硬编码颜色仅保留为早期生命周期 fallback
 - [ ] 由项目维护者重新验证内置浅/深及额外彩色主题的导航栏颜色和虚拟键明暗
 - [ ] 分别设计三键导航、手势导航、浮动键盘和 bottom frame 的兼容策略
+- [x] 对照 Gboard 复核固定 120Hz 请求、触摸 boost、内容速度提示和设备 ARR 能力
+- [ ] 为 `FrameRateCompat` 增加 `onFinishInputView()` 对称释放，再决定是否实验动态 boost
 - [ ] 继续复核其他已修改功能
 
 ## 后续兼容性工作

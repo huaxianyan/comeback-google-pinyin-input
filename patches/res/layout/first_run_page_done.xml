@@ -7,9 +7,5 @@
         <TextView
             android:text="@string/setup_done_page_title"
             style="@style/FirstRunPageTitle" />
-        <Button
-            android:id="@id/first_run_page_setup_done_button"
-            android:text="@string/first_run_setup_done_hint"
-            style="@style/FirstRunPageButton" />
     </LinearLayout>
 </com.google.android.apps.inputmethod.libs.framework.firstrun.SetupDonePage>

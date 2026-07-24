@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="first_run_previous">上一步</string>
+    <string name="first_run_next">下一步</string>
+</resources>

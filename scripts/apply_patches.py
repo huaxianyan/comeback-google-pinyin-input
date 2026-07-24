@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply Android 16 compatibility v35 with validated symbol pager fling repair.
+"""Apply Android 16/17 compatibility patches to Google Pinyin 4.5.2.
 
 This script intentionally targets the unmodified Google Pinyin Input
 4.5.2.193126728 arm64-v8a APK. It aborts instead of guessing when an expected
@@ -32,7 +32,7 @@ def replace_exactly(path: Path, old: str, new: str, expected: int) -> None:
     path.write_text(text.replace(old, new), encoding="utf-8", newline="\n")
 
 
-def apply(decoded: Path) -> None:
+def apply(decoded: Path, application_id: str) -> None:
     if not (decoded / "apktool.yml").is_file():
         raise RuntimeError(f"Not an apktool output directory: {decoded}")
 
@@ -46,8 +46,8 @@ def apply(decoded: Path) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520349\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat36-handwriting-canvas",
+        "versionInfo:\n  versionCode: 4520353\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat40-footer-finish",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -56,7 +56,6 @@ def apply(decoded: Path) -> None:
         "        <item>@layout/first_run_page_permission</item>\n"
         "        <item>@layout/first_run_page_setup_user_metrics</item>\n"
         "        <item>@layout/first_run_page_done</item>",
-        "        <item>@layout/first_run_page_permission</item>\n"
         "        <item>@layout/first_run_page_done</item>",
     )
     replace_once(
@@ -77,8 +76,9 @@ def apply(decoded: Path) -> None:
         destination = decoded / "res" / source.relative_to(resource_patches)
         destination.parent.mkdir(parents=True, exist_ok=True)
         overwritten_layouts = {
+            "first_run.xml",
             "first_run_page_done.xml",
-            "first_run_page_indicator_image.xml",
+            "first_run_page_footer.xml",
         }
         if destination.exists() and source.name not in overwritten_layouts:
             raise RuntimeError(f"Refusing to overwrite resource: {destination}")
@@ -182,8 +182,9 @@ def apply(decoded: Path) -> None:
         1,
     )
 
-    # Always use the complete first-run page set. The old activation-only
-    # branch produced two indicators, then restarted with four after IME select.
+    # Keep a stable three-step flow: enable, select, done. Current Gboard no
+    # longer includes its legacy permission or user-metrics pages in the normal
+    # first-run array; capabilities request permission only when actually used.
     first_run_activity = decoded / (
         "smali/com/google/android/apps/inputmethod/pinyin/firstrun/"
         "PinyinFirstRunActivity.smali"
@@ -250,17 +251,6 @@ def apply(decoded: Path) -> None:
     .locals 1
 
     .prologue
-    iget-object v0, p0, Lapy;->a:[Ljava/lang/String;
-
-    array-length v0, v0
-
-    if-lez v0, :without_permission
-
-    const v0, 0x7f0a0018
-
-    return v0
-
-    :without_permission
     const v0, 0x7f0a0019
 
     return v0
@@ -269,22 +259,158 @@ def apply(decoded: Path) -> None:
     replace_once(
         first_run_activity,
         "\n\n# virtual methods\n.method protected final a()I",
-        "\n\n# virtual methods\n.method public onBackPressed()V\n"
-        "    .locals 0\n\n"
+        "\n\n# virtual methods\n.method public final exitGuide()V\n"
+        "    .locals 2\n\n"
+        "    new-instance v0, Landroid/content/Intent;\n\n"
+        "    const-string v1, \"android.intent.action.MAIN\"\n\n"
+        "    invoke-direct {v0, v1}, Landroid/content/Intent;-><init>(Ljava/lang/String;)V\n\n"
+        "    const-string v1, \"android.intent.category.HOME\"\n\n"
+        "    invoke-virtual {v0, v1}, Landroid/content/Intent;->addCategory("
+        "Ljava/lang/String;)Landroid/content/Intent;\n\n"
+        "    const/high16 v1, 0x14000000\n\n"
+        "    invoke-virtual {v0, v1}, Landroid/content/Intent;->addFlags(I)"
+        "Landroid/content/Intent;\n\n"
+        "    invoke-virtual {p0, v0}, Lcom/google/android/apps/inputmethod/pinyin/"
+        "firstrun/PinyinFirstRunActivity;->startActivity(Landroid/content/Intent;)V\n\n"
         "    invoke-virtual {p0}, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
         "PinyinFirstRunActivity;->finishAndRemoveTask()V\n\n"
+        "    return-void\n"
+        ".end method\n\n"
+        ".method public onBackPressed()V\n"
+        "    .locals 2\n\n"
+        "    iget-object v0, p0, Lapy;->a:Lcom/google/android/apps/inputmethod/libs/"
+        "framework/keyboard/widget/BidiViewPager;\n\n"
+        "    invoke-virtual {v0}, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "keyboard/widget/BidiViewPager;->a()I\n\n"
+        "    move-result v1\n\n"
+        "    if-lez v1, :exit_guide\n\n"
+        "    add-int/lit8 v1, v1, -0x1\n\n"
+        "    invoke-virtual {v0, v1}, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "keyboard/widget/BidiViewPager;->b(I)V\n\n"
+        "    return-void\n\n"
+        "    :exit_guide\n"
+        "    invoke-virtual {p0}, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
+        "PinyinFirstRunActivity;->exitGuide()V\n\n"
         "    return-void\n"
         ".end method\n\n"
         ".method protected final a()I",
     )
 
-    # Closing or pressing Back must remove the setup task instead of revealing
-    # the legacy settings activity that launched the first-run screen.
+    # The first-run footer uses the framework's existing navi_skip slot as a
+    # Previous button. Keep the same listener's original Finish behavior for
+    # feature-tour activities, but move one page back in Pinyin first-run.
+    previous_listener = decoded / "smali/apz.smali"
+    replace_once(
+        previous_listener,
+        ".method public final onClick(Landroid/view/View;)V\n"
+        "    .locals 1\n\n"
+        "    .prologue\n"
+        "    .line 2\n"
+        "    iget-object v0, p0, Lapz;->a:Lapy;\n\n"
+        "    invoke-virtual {v0}, Lapy;->finish()V\n\n"
+        "    .line 3\n"
+        "    return-void\n"
+        ".end method",
+        ".method public final onClick(Landroid/view/View;)V\n"
+        "    .locals 2\n\n"
+        "    iget-object v0, p0, Lapz;->a:Lapy;\n\n"
+        "    instance-of v1, v0, Lcom/google/android/apps/inputmethod/pinyin/"
+        "firstrun/PinyinFirstRunActivity;\n\n"
+        "    if-eqz v1, :finish_feature_activity\n\n"
+        "    iget-object v0, v0, Lapy;->a:Lcom/google/android/apps/inputmethod/libs/"
+        "framework/keyboard/widget/BidiViewPager;\n\n"
+        "    invoke-virtual {v0}, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "keyboard/widget/BidiViewPager;->a()I\n\n"
+        "    move-result v1\n\n"
+        "    if-lez v1, :done\n\n"
+        "    add-int/lit8 v1, v1, -0x1\n\n"
+        "    invoke-virtual {v0, v1}, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "keyboard/widget/BidiViewPager;->b(I)V\n\n"
+        "    goto :done\n\n"
+        "    :finish_feature_activity\n"
+        "    invoke-virtual {v0}, Lapy;->finish()V\n\n"
+        "    :done\n"
+        "    return-void\n"
+        ".end method",
+    )
+
+    # On the last first-run page the right-side Next slot becomes Finish and
+    # exits through the already validated Home/task cleanup path.
+    next_listener = decoded / "smali/aqa.smali"
+    replace_once(
+        next_listener,
+        "    invoke-virtual {v0}, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "keyboard/widget/BidiViewPager;->a()I\n\n"
+        "    move-result v1\n\n"
+        "    .line 5\n"
+        "    iget-object v0, p0, Laqa;->a:Lapy;",
+        "    invoke-virtual {v0}, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "keyboard/widget/BidiViewPager;->a()I\n\n"
+        "    move-result v1\n\n"
+        "    iget-object v0, p0, Laqa;->a:Lapy;\n\n"
+        "    instance-of v2, v0, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
+        "PinyinFirstRunActivity;\n\n"
+        "    if-eqz v2, :continue_next\n\n"
+        "    iget-object v2, v0, Lapy;->a:[I\n\n"
+        "    array-length v2, v2\n\n"
+        "    add-int/lit8 v2, v2, -0x1\n\n"
+        "    if-ne v1, v2, :continue_next\n\n"
+        "    check-cast v0, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
+        "PinyinFirstRunActivity;\n\n"
+        "    invoke-virtual {v0}, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
+        "PinyinFirstRunActivity;->exitGuide()V\n\n"
+        "    return-void\n\n"
+        "    :continue_next\n"
+        "    .line 5\n"
+        "    iget-object v0, p0, Laqa;->a:Lapy;",
+    )
+
+    # Page selection owns footer visibility, Next/Finish text and initial enabled
+    # state. Run this after old generic footer logic so first/last rules win.
+    page_adapter = decoded / "smali/aqc.smali"
+    replace_once(
+        page_adapter,
+        "    :cond_3\n"
+        "    return-void\n\n"
+        "    :cond_4",
+        "    :cond_3\n"
+        "    invoke-virtual {p0, p1}, Laqc;->a(I)I\n\n"
+        "    move-result v4\n\n"
+        "    iget-object v2, p0, Laqc;->a:Lapy;\n\n"
+        "    invoke-static {v2, v4, p2}, Lcom/google/android/apps/inputmethod/pinyin/"
+        "firstrun/FirstRunNavigationCompat;->update(Lapy;ILjava/lang/Object;)V\n\n"
+        "    return-void\n\n"
+        "    :cond_4",
+    )
+
+    # Completing Enable/Select used to auto-advance through Lapt. Keep the page
+    # in place and only unlock Next, so navigation is explicit and predictable.
+    completion_runnable = decoded / "smali/apt.smali"
+    replace_once(
+        completion_runnable,
+        "    check-cast v0, Lapy;\n\n"
+        "    iget-object v1, p0, Lapt;->a:Lapr;",
+        "    check-cast v0, Lapy;\n\n"
+        "    instance-of v1, v0, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
+        "PinyinFirstRunActivity;\n\n"
+        "    if-eqz v1, :original_completion\n\n"
+        "    invoke-static {v0}, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
+        "FirstRunNavigationCompat;->markCurrentComplete(Lapy;)V\n\n"
+        "    return-void\n\n"
+        "    :original_completion\n"
+        "    iget-object v1, p0, Lapt;->a:Lapr;",
+    )
+
+    # Completion/close must explicitly bring Home forward before removing the
+    # setup task; finishAndRemoveTask alone can reveal its launcher settings.
     for listener in ("smali/aqb.smali", "smali/aqe.smali"):
         replace_once(
             decoded / listener,
             "    invoke-virtual {v0}, Lapy;->finish()V",
-            "    invoke-virtual {v0}, Lapy;->finishAndRemoveTask()V",
+            "    check-cast v0, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
+            "PinyinFirstRunActivity;\n\n"
+            "    invoke-virtual {v0}, Lcom/google/android/apps/inputmethod/pinyin/"
+            "firstrun/PinyinFirstRunActivity;->exitGuide()V",
         )
 
     # The left list scrolls correctly, but its original starting SoftKey is
@@ -734,22 +860,22 @@ def apply(decoded: Path) -> None:
     replace_once(
         manifest,
         'package="com.google.android.inputmethod.pinyin"',
-        'package="com.google.android.inputmethod.pinyin.compat"',
+        f'package="{application_id}"',
     )
     replace_once(
         manifest,
         'android:authorities="com.google.android.inputmethod.pinyin.user_dictionary"',
-        'android:authorities="com.google.android.inputmethod.pinyin.compat.user_dictionary"',
+        f'android:authorities="{application_id}.user_dictionary"',
     )
     replace_once(
         decoded / "res/values/strings.xml",
         '<string name="user_dictionary_authority">com.google.android.inputmethod.pinyin.user_dictionary</string>',
-        '<string name="user_dictionary_authority">com.google.android.inputmethod.pinyin.compat.user_dictionary</string>',
+        f'<string name="user_dictionary_authority">{application_id}.user_dictionary</string>',
     )
     replace_once(
         decoded / "smali/ayn.smali",
         '    const-string v2, "com.google.android.inputmethod.pinyin"',
-        '    const-string v2, "com.google.android.inputmethod.pinyin.compat"',
+        f'    const-string v2, "{application_id}"',
     )
 
     for obsolete_component in (
@@ -990,6 +1116,26 @@ def apply(decoded: Path) -> None:
         helper_dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(helper_src, helper_dst)
 
+    first_run_helpers = (
+        (
+            "FirstRunNavigationCompat.smali",
+            "smali/com/google/android/apps/inputmethod/pinyin/firstrun/"
+            "FirstRunNavigationCompat.smali",
+        ),
+        (
+            "NonSwipeableFirstRunViewPager.smali",
+            "smali/com/google/android/apps/inputmethod/libs/framework/firstrun/"
+            "NonSwipeableFirstRunViewPager.smali",
+        ),
+    )
+    for helper_name, relative_destination in first_run_helpers:
+        helper_src = ROOT / "patches/smali" / helper_name
+        helper_dst = decoded / relative_destination
+        if helper_dst.exists():
+            raise RuntimeError(f"Refusing to overwrite existing helper: {helper_dst}")
+        helper_dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(helper_src, helper_dst)
+
     candidate_src = ROOT / "patches/smali/ClipboardCandidateCompat.smali"
     candidate_dst = decoded / (
         "smali/com/google/android/apps/inputmethod/libs/framework/core/"
@@ -999,14 +1145,19 @@ def apply(decoded: Path) -> None:
         raise RuntimeError(f"Refusing to overwrite existing helper: {candidate_dst}")
     shutil.copyfile(candidate_src, candidate_dst)
 
-    print(f"Applied compatibility v36 handwriting Canvas patches to {decoded}")
+    print(f"Applied compatibility v40 footer Finish patches to {decoded} ({application_id})")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("decoded", type=Path, help="apktool decoded directory")
+    parser.add_argument(
+        "--application-id",
+        default="com.google.android.inputmethod.pinyin.compat",
+        help="application ID for coexistence builds",
+    )
     args = parser.parse_args()
-    apply(args.decoded.resolve())
+    apply(args.decoded.resolve(), args.application_id)
 
 
 if __name__ == "__main__":

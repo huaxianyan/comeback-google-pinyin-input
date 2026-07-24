@@ -1,5 +1,70 @@
 # Changelog
 
+## [0.34.0] - 2026-07-24
+
+对应 Compatibility v40 / versionCode `4520353`，继续使用独立 guideaudit 包验证统一的 footer 操作。
+
+### Changed
+
+- 移除完成页内容区中央的完成按钮；完成页右下角沿用前两页“下一步”的固定位置和同一按钮样式。
+- 进入最后一页时，右下角按钮文字从“下一步”切换为“完成”，保持可交互；返回前一页时恢复为“下一步”。
+- 右下角按钮在最后一页调用 V38 已验证的 `exitGuide()`，直接返回桌面并移除引导任务；第一、第二页仍执行原生下一页动画。
+- 最后一页继续保留左下角“上一步”，整体形成固定的左后退、右继续/完成导航逻辑。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat40-footer-finish`。
+- APK 已成功重建，通过 zipalign 与 v1/v2/v3 签名校验，覆盖安装 guideaudit 测试包，清除该测试包数据并打开引导入口；未执行功能或视觉测试。
+
+## [0.33.0] - 2026-07-23
+
+对应 Compatibility v39 / versionCode `4520352`，继续使用独立 guideaudit 包验证显式引导导航。
+
+### Changed
+
+- 完整移除首次引导底部 PageIndicator，不再依赖旧 `PageIndicatorView` 的 enabled-state 视觉语义。
+- 将首次引导 pager 替换为 `NonSwipeableFirstRunViewPager`，仅禁止用户触摸滑页，保留按钮触发的原生程序化翻页和动画。
+- 底部改为左侧“上一步”和右侧“下一步”按钮；第一页隐藏上一步，最后一页隐藏下一步。
+- 上一步复用旧框架 `navi_skip` 插槽但仅在 `PinyinFirstRunActivity` 中改为后退，功能介绍 Activity 继续保持原来的跳过/关闭行为。
+- 启用或选择输入法完成后不再自动跳页，只解锁当前页的下一步按钮；未完成时下一步不可交互，并使用明确的 disabled 背景和文字颜色。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat39-guided-first-run`。
+- APK 已成功重建，通过 zipalign 与 v1/v2/v3 签名校验，并覆盖安装独立的 `com.google.android.inputmethod.pinyin.guideaudit` 测试包；已清除该测试包数据并打开引导入口，未执行功能或视觉测试。
+
+## [0.32.0] - 2026-07-23
+
+对应 Compatibility v38 / versionCode `4520351`，继续使用独立 guideaudit 包验证首次引导。
+
+### Fixed
+
+- 移除步骤完成状态中勾号背后的第二层圆形底色，改为直接在外层完成容器上显示随明暗主题着色的勾号。
+- 系统返回键在第二、第三页时返回前一页，仅在第一页退出；不再从任意页面直接关闭引导。
+- 完成或从第一页退出时先显式返回桌面，再移除引导任务，避免重新露出启动引导的应用设置页面。
+- 为指示器增加独立的明暗主题颜色；暗色模式当前页使用浅色，其他页使用明显更暗的灰色，不再复用按钮 primary/outline 色。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat38-first-run-navigation`。
+- APK 已成功重建，通过 zipalign 与 v1/v2/v3 签名校验，并覆盖安装独立的 `com.google.android.inputmethod.pinyin.guideaudit` 测试包；未执行功能或视觉测试。
+
+## [0.31.0] - 2026-07-23
+
+对应 Compatibility v37 / versionCode `4520350`，用于首次使用引导专项验证。
+
+### Changed
+
+- 对照当前 Gboard 的标准三页数组，将首次使用流程固定为“启用输入法 → 选择输入法 → 完成”，不再显示旧权限总览页或匿名指标页。
+- 保留旧框架从系统设置/输入法选择器返回后的状态刷新、自动推进、PageIndicator、完成按钮和 `finishAndRemoveTask()` 行为。
+- 构建脚本新增可选 application ID；正式默认仍为 `com.google.android.inputmethod.pinyin.compat`，本次测试包使用独立的 `com.google.android.inputmethod.pinyin.guideaudit`，并同步隔离用户词典 authority 和应用数据。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat37-first-run-audit`。
+- APK 已成功重建，通过 zipalign 与 v1/v2/v3 签名校验，并以独立包名安装到 Pixel 10 Pro；原 V36 compatibility 包仍保持安装且版本不变。
+- 未执行引导功能或视觉测试，验证由项目维护者完成。
+
 ## [0.30.0] - 2026-07-23
 
 对应 Compatibility v36 / versionCode `4520349`。

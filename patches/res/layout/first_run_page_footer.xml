@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <Button
+            android:id="@id/navi_skip"
+            android:text="@string/first_run_previous"
+            style="@style/FirstRunPageFooterButton" />
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+        <Button
+            android:id="@id/navi_next"
+            android:text="@string/first_run_next"
+            style="@style/FirstRunPageFooterButton" />
+    </LinearLayout>
+</merge>

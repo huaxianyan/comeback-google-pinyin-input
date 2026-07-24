@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.38.0] - 2026-07-24
+
+对应 Compatibility v44 / versionCode `4520357`，修复 V43 本地目录选择器无法从左侧位置列表进入内部存储的问题。
+
+### Fixed
+
+- 移除 tree picker 上的 `Intent.EXTRA_LOCAL_ONLY` 提示；Android 16 DocumentsUI 在目录模式下可能因此隐藏或禁用 primary storage 入口。
+- 纯本地限制仍由返回 URI 的 `com.android.externalstorage.documents` authority 强制执行，云端 provider 即使显示也无法通过验证。
+- API 26+ 使用 `DocumentsContract.EXTRA_INITIAL_URI` 默认打开 `primary:Documents`，让用户能直接选择预先建立的 `Documents/GooglePinyinBackupAudit`，体验更接近现有“导入用户字典”的文件选择器。
+- 继续使用 `ACTION_OPEN_DOCUMENT_TREE`，因为现有导入的 `GET_CONTENT` 只能授权单个文件，无法给自动备份授予创建和轮换多个文件所需的目录写权限。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat44-local-backup-picker-fix`。
+- 独立测试包名仍为 `com.google.android.inputmethod.pinyin.localbackupaudit`，可覆盖安装 V42/V43。
+
 ## [0.37.0] - 2026-07-24
 
 对应 Compatibility v43 / versionCode `4520356`，修复 V42 打开字典设置时的立即崩溃。

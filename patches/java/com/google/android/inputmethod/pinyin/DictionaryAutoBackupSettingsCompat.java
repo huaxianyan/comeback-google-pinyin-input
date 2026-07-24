@@ -12,6 +12,7 @@ import android.preference.ListPreference;
 import android.preference.TwoStatePreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
+import android.provider.DocumentsContract;
 import android.provider.OpenableColumns;
 import android.text.format.DateFormat;
 import android.widget.Toast;
@@ -182,7 +183,17 @@ public final class DictionaryAutoBackupSettingsCompat {
             }
             enableAfterPick = enableAfterSelection;
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-            intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+            // GET_CONTENT (used by the existing importer) is only a file grant
+            // and cannot create rotating sibling backups. Keep the required
+            // tree picker, but do not apply EXTRA_LOCAL_ONLY: current DocumentsUI
+            // can hide the primary-storage root for tree requests when that hint
+            // is present. Local-only policy is enforced on the returned authority.
+            if (Build.VERSION.SDK_INT >= 26) {
+                Uri initial = DocumentsContract.buildDocumentUri(
+                        DictionaryAutoBackupCompat.EXTERNAL_STORAGE_AUTHORITY,
+                        "primary:Documents");
+                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, initial);
+            }
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
                     | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                     | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION

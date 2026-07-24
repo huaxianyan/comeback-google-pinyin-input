@@ -97,7 +97,8 @@ Android 官方 SAF 文档：
 选择 Intent：
 
 - `Intent.ACTION_OPEN_DOCUMENT_TREE`；
-- `Intent.EXTRA_LOCAL_ONLY = true`，请求系统 picker 优先只显示本机内容；该 extra 不能替代返回 URI 的本地 provider 校验；
+- 不使用 `Intent.EXTRA_LOCAL_ONLY`：Android 16 DocumentsUI 在 tree 模式下可能因此隐藏或禁用 primary storage 入口；纯本地策略改由返回 URI 的 provider authority 强制校验；
+- API 26+ 通过 `DocumentsContract.EXTRA_INITIAL_URI` 默认打开内部存储的 `Documents` 目录，使体验接近现有导入文件选择器；
 - `FLAG_GRANT_READ_URI_PERMISSION`；
 - `FLAG_GRANT_WRITE_URI_PERMISSION`；
 - `FLAG_GRANT_PERSISTABLE_URI_PERMISSION`；
@@ -109,7 +110,7 @@ Android 官方 SAF 文档：
 2. 调用 `ContentResolver.takePersistableUriPermission()`；
 3. 验证 URI 属于本地 DocumentsProvider；Pixel/AOSP 本地共享存储为 `com.android.externalstorage.documents`；
 4. 第一版建议只允许经过本项目实测的 `com.android.externalstorage.documents`，它同时覆盖 primary shared storage 和该 provider 暴露的可移除 SD 卡；
-5. 若以后支持 OEM 的其他本地 provider，必须按设备实测加入明确 allowlist，不能仅凭显示名称或 `EXTRA_LOCAL_ONLY` 接受任意 authority；
+5. 若以后支持 OEM 的其他本地 provider，必须按设备实测加入明确 allowlist，不能仅凭显示名称接受任意 authority；
 6. 拒绝 Drive、Dropbox 等云端 provider URI；
 7. 在所选目录完成一次“创建测试文档 → 写入 → rename → 删除”；
 8. 只有全部成功才保存目录并允许启用自动备份。
@@ -522,7 +523,7 @@ PinyinIME 进入保存检查
 ### Phase A：仅本地目录与立即备份
 
 - 添加设置项和字符串/数组；
-- 实现 `EXTRA_LOCAL_ONLY` tree picker；
+- 实现默认打开内部存储 Documents、但以 authority 强制限制本地 provider 的 tree picker；
 - 验证本地 provider；
 - 验证 create/write/read/rename/delete；
 - 完成“立即备份”；

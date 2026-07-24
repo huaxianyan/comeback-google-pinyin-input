@@ -1,5 +1,7 @@
 # 用户词典本地自动备份：调研与方案设计
 
+> **最终实现说明（1.0.0）**：本文保留 V42–V44 SAF 方案及其失败过程作为研究记录。Pixel 10 Pro / Android 16 的 `DocumentsUI` 对 `ACTION_OPEN_DOCUMENT_TREE` 和旧 `ACTION_GET_CONTENT` 都显示空存储，因此正式实现已放弃可选 tree URI，固定使用 `MediaStore.Files` 的 `Documents/GooglePinyinBackup`。写入采用 `IS_PENDING=1 → 原生 exporter → BOM/header 校验 → IS_PENDING=0`；设置页中的整合式列表负责手动导入，卸载重装后按需申请旧框架相同的文件权限，并保留文件管理器 `ACTION_VIEW`/`ACTION_SEND` 后备入口。以下 SAF 内容仅表示设计演进，不再是当前规范。
+
 ## 1. 使用场景
 
 本功能只解决一个问题：

@@ -46,8 +46,8 @@ def apply(decoded: Path, application_id: str) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520359\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat46-integrated-backup-import",
+        "versionInfo:\n  versionCode: 4520360\n"
+        "  versionName: 4.5.2",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -645,18 +645,17 @@ def apply(decoded: Path, application_id: str) -> None:
         "",
     )
 
-    # Local-only rotating exports survive clear-data/uninstall and are restored
-    # explicitly through the existing user-dictionary import action. These
-    # controls are non-persistent because a separate, non-BackupAgent preference
-    # file owns their state.
+    # Fixed-path rotating exports survive clear-data/uninstall. The validated
+    # local backup actions replace the obsolete picker-based import/export rows;
+    # their state lives outside the preferences registered with BackupAgent.
     replace_once(
         dictionary_settings_xml,
         '        <Preference android:persistent="false" '
-        'android:title="@string/setting_export_user_dictionary_title" '
-        'android:key="@string/setting_export_user_dictionary_key" />',
+        'android:title="@string/setting_import_user_dictionary_title" '
+        'android:key="@string/setting_import_user_dictionary_key" />\n'
         '        <Preference android:persistent="false" '
         'android:title="@string/setting_export_user_dictionary_title" '
-        'android:key="@string/setting_export_user_dictionary_key" />\n'
+        'android:key="@string/setting_export_user_dictionary_key" />',
         '        <CheckBoxPreference android:persistent="false" '
         'android:title="@string/dictionary_auto_backup_title" '
         'android:key="dictionary_auto_backup_enabled" '
@@ -1452,7 +1451,7 @@ def apply(decoded: Path, application_id: str) -> None:
         raise RuntimeError(f"Refusing to overwrite existing helper: {candidate_dst}")
     shutil.copyfile(candidate_src, candidate_dst)
 
-    print(f"Applied compatibility v46 integrated backup import to {decoded} ({application_id})")
+    print(f"Applied Google Pinyin compatibility 4.5.2 to {decoded} ({application_id})")
 
 
 def main() -> None:

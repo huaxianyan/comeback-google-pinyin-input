@@ -1,8 +1,9 @@
-# User-supplied proprietary APKs and generated output
+# APKs and generated output (the verified archival original is intentional)
 *.apk
+!original/
+!original/google-pinyin-input-4.5.2.193126728-arm64-v8a.apk
 *.apks
 *.aab
-original/
 work/
 build/
 dist/

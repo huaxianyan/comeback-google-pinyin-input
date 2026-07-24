@@ -119,6 +119,74 @@ PowerShell 示例：
 
 补丁脚本会从原始 APK 解码、应用资源及 smali 改动、修改为独立包名，然后重建、对齐并签名。
 
+## GitHub Actions 自动构建与发布
+
+工作流位于 [`.github/workflows/build-release.yml`](.github/workflows/build-release.yml)：
+
+- 推送到 `master`：构建、签名、校验 APK，并保存 30 天的 Actions artifact；
+- 推送 `v*` 标签：执行相同构建，然后创建正式 GitHub Release 并上传 APK 与 `.sha256`；
+- `workflow_dispatch`：可从 Actions 页面手动构建，不自动发布 Release。
+
+### 签名一致性
+
+Android 是否允许覆盖升级取决于**签名证书身份**，而不是 APK 文件名。自动构建必须使用与现有正式兼容版完全相同的 PKCS#12/JKS 私钥。私钥和密码不能写进仓库或普通 Actions Variables，应存入 GitHub Actions **Secrets**：
+
+| GitHub Secret | 内容 |
+| --- | --- |
+| `ANDROID_SIGNING_KEYSTORE_BASE64` | 正式 `.p12` 文件的完整 Base64 |
+| `ANDROID_SIGNING_STORE_PASSWORD` | keystore 密码 |
+| `ANDROID_SIGNING_KEY_PASSWORD` | 私钥密码 |
+
+以下非敏感配置写入 GitHub Actions **Variables**：
+
+| GitHub Variable | 正式值 |
+| --- | --- |
+| `ANDROID_SIGNING_KEY_ALIAS` | `google-pinyin-test` |
+| `ANDROID_SIGNING_CERT_SHA256` | `985CBF843A362169B129AEAC5E153D13095F0923231936D1486A20C8332CDE2F` |
+| `ANDROID_APPLICATION_ID` | `com.google.android.inputmethod.pinyin.compat` |
+
+工作流在构建前使用 `keytool` 读取恢复出的证书指纹，并与 `ANDROID_SIGNING_CERT_SHA256` 比较。证书不一致、密码错误、alias 错误或任何配置缺失都会立即终止，因此不会误发一个无法覆盖升级的 APK。原始 APK、apktool 和签名工具也分别执行固定 SHA-256 校验。
+
+### 使用 GitHub CLI 配置仓库
+
+先登录并进入仓库目录：
+
+```powershell
+gh auth login
+```
+
+将 keystore 转为 Base64 后直接送入 Secret；Base64 不会写入仓库文件：
+
+```powershell
+[Convert]::ToBase64String(
+  [IO.File]::ReadAllBytes("work/test-signing.p12")
+) | gh secret set ANDROID_SIGNING_KEYSTORE_BASE64
+```
+
+密码使用交互式输入，避免出现在终端历史中：
+
+```powershell
+gh secret set ANDROID_SIGNING_STORE_PASSWORD
+gh secret set ANDROID_SIGNING_KEY_PASSWORD
+```
+
+设置非敏感变量：
+
+```powershell
+gh variable set ANDROID_SIGNING_KEY_ALIAS --body "google-pinyin-test"
+gh variable set ANDROID_SIGNING_CERT_SHA256 --body "985CBF843A362169B129AEAC5E153D13095F0923231936D1486A20C8332CDE2F"
+gh variable set ANDROID_APPLICATION_ID --body "com.google.android.inputmethod.pinyin.compat"
+```
+
+配置后可在 GitHub 的 **Actions → Build and release APK → Run workflow** 手动验证一次。确认 artifact 能安装并覆盖正式兼容版后，以新版本提交创建标签：
+
+```powershell
+git tag -a v1.0.1 -m "Google Pinyin compatibility 1.0.1"
+git push origin v1.0.1
+```
+
+标签推送后无需在本地构建或上传 APK。`GITHUB_TOKEN` 由 Actions 自动提供，只授予工作流创建 Release 所需的 `contents: write` 权限。
+
 ## 来源、版权与非商业声明
 
 - **Google Pinyin Input、Google 拼音输入法、Google 名称、标志、原始程序、资源、词库和相关商标的版权及其他权利归 Google LLC、Google Inc. 或其各自权利人所有。**

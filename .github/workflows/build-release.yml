@@ -1,0 +1,200 @@
+name: Build and release APK
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: google-pinyin-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  APKTOOL_VERSION: "2.12.1"
+  APKTOOL_SHA256: "66cf4524a4a45a7f56567d08b2c9b6ec237bcdd78cee69fd4a59c8a0243aeafa"
+  SIGNER_VERSION: "1.3.0"
+  SIGNER_SHA256: "e1299fd6fcf4da527dd53735b56127e8ea922a321128123b9c32d619bba1d835"
+  ORIGINAL_APK: original/google-pinyin-input-4.5.2.193126728-arm64-v8a.apk
+  ORIGINAL_APK_SHA256: "980fd0f4695f683648e6f7ab9a15a24732e8957b5b14b25d49af931176574bd7"
+  RELEASE_APK_NAME: google-pinyin-4.5.2-android-16-17.apk
+
+jobs:
+  build:
+    name: Build, sign and verify
+    runs-on: windows-latest
+    env:
+      KEYSTORE_BASE64: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 }}
+      STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+      KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+      KEY_ALIAS: ${{ vars.ANDROID_SIGNING_KEY_ALIAS }}
+      EXPECTED_CERT_SHA256: ${{ vars.ANDROID_SIGNING_CERT_SHA256 }}
+      APPLICATION_ID: ${{ vars.ANDROID_APPLICATION_ID }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate repository configuration
+        shell: pwsh
+        run: |
+          $required = @{
+            ANDROID_SIGNING_KEYSTORE_BASE64 = $env:KEYSTORE_BASE64
+            ANDROID_SIGNING_STORE_PASSWORD = $env:STORE_PASSWORD
+            ANDROID_SIGNING_KEY_PASSWORD = $env:KEY_PASSWORD
+            ANDROID_SIGNING_KEY_ALIAS = $env:KEY_ALIAS
+            ANDROID_SIGNING_CERT_SHA256 = $env:EXPECTED_CERT_SHA256
+            ANDROID_APPLICATION_ID = $env:APPLICATION_ID
+          }
+          $missing = @($required.Keys | Where-Object { [string]::IsNullOrWhiteSpace($required[$_]) })
+          if ($missing.Count -ne 0) {
+            throw "Missing GitHub Actions secrets/variables: $($missing -join ', ')"
+          }
+
+      - name: Download and verify build tools
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force work/tools | Out-Null
+          $apktoolUrl = "https://github.com/iBotPeaches/Apktool/releases/download/v$env:APKTOOL_VERSION/apktool_$env:APKTOOL_VERSION.jar"
+          $signerUrl = "https://github.com/patrickfav/uber-apk-signer/releases/download/v$env:SIGNER_VERSION/uber-apk-signer-$env:SIGNER_VERSION.jar"
+          Invoke-WebRequest -Uri $apktoolUrl -OutFile work/tools/apktool.jar
+          Invoke-WebRequest -Uri $signerUrl -OutFile work/tools/uber-apk-signer.jar
+
+          function Assert-Sha256([string]$Path, [string]$Expected) {
+            $actual = (Get-FileHash $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($actual -ne $Expected.ToLowerInvariant()) {
+              throw "SHA-256 mismatch for $Path. Expected $Expected, got $actual"
+            }
+          }
+          Assert-Sha256 work/tools/apktool.jar $env:APKTOOL_SHA256
+          Assert-Sha256 work/tools/uber-apk-signer.jar $env:SIGNER_SHA256
+          Assert-Sha256 $env:ORIGINAL_APK $env:ORIGINAL_APK_SHA256
+
+      - name: Restore keystore and verify signing identity
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force work/signing | Out-Null
+          try {
+            $bytes = [Convert]::FromBase64String($env:KEYSTORE_BASE64)
+          } catch {
+            throw "ANDROID_SIGNING_KEYSTORE_BASE64 is not valid base64"
+          }
+          [IO.File]::WriteAllBytes("work/signing/release.p12", $bytes)
+
+          $keytoolOutput = & keytool -list -v `
+            -storetype PKCS12 `
+            -keystore work/signing/release.p12 `
+            -storepass $env:STORE_PASSWORD `
+            -alias $env:KEY_ALIAS 2>&1 | Out-String
+          if ($LASTEXITCODE -ne 0) { throw "Unable to open signing keystore or alias" }
+
+          $match = [regex]::Match($keytoolOutput, "SHA256:\s*([0-9A-Fa-f:]+)")
+          if (-not $match.Success) { throw "Unable to read SHA-256 certificate fingerprint" }
+          $actual = $match.Groups[1].Value.Replace(":", "").ToUpperInvariant()
+          $expected = $env:EXPECTED_CERT_SHA256.Replace(":", "").ToUpperInvariant()
+          if ($actual -ne $expected) {
+            throw "Signing certificate mismatch. Expected $expected, got $actual"
+          }
+          Write-Host "Signing certificate verified: $actual"
+
+      - name: Build and sign APK
+        shell: pwsh
+        run: |
+          ./scripts/build.ps1 `
+            -ApkPath $env:ORIGINAL_APK `
+            -ApktoolJar work/tools/apktool.jar `
+            -SignerJar work/tools/uber-apk-signer.jar `
+            -Keystore work/signing/release.p12 `
+            -KeyAlias $env:KEY_ALIAS `
+            -StorePassword $env:STORE_PASSWORD `
+            -KeyPassword $env:KEY_PASSWORD `
+            -ApplicationId $env:APPLICATION_ID
+
+      - name: Prepare release artifact
+        id: artifact
+        shell: pwsh
+        run: |
+          $signed = @(Get-ChildItem dist -Filter "*-aligned-signed.apk")
+          if ($signed.Count -ne 1) {
+            throw "Expected exactly one signed APK, found $($signed.Count)"
+          }
+          $releasePath = Join-Path dist $env:RELEASE_APK_NAME
+          Copy-Item $signed[0].FullName $releasePath -Force
+          $sha256 = (Get-FileHash $releasePath -Algorithm SHA256).Hash.ToLowerInvariant()
+          "path=$releasePath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "sha256=$sha256" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "SHA-256  $sha256  $env:RELEASE_APK_NAME" | Out-File "${releasePath}.sha256" -Encoding ascii
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value @"
+          ## Signed APK
+
+          - File: ``$env:RELEASE_APK_NAME``
+          - SHA-256: ``$sha256``
+          - Application ID: ``$env:APPLICATION_ID``
+          - Signing certificate: ``$env:EXPECTED_CERT_SHA256``
+          "@
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: google-pinyin-${{ github.sha }}
+          path: |
+            dist/${{ env.RELEASE_APK_NAME }}
+            dist/${{ env.RELEASE_APK_NAME }}.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub Release for version tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+          APK_PATH: ${{ steps.artifact.outputs.path }}
+          APK_SHA256: ${{ steps.artifact.outputs.sha256 }}
+        run: |
+          $notes = @"
+          Automated signed build from tag ``$env:TAG_NAME``.
+
+          - Application ID: ``$env:APPLICATION_ID``
+          - APK SHA-256: ``$env:APK_SHA256``
+          - Signing certificate SHA-256: ``$env:EXPECTED_CERT_SHA256``
+          - Source commit: ``${{ github.sha }}``
+          "@
+          $notes | Out-File release-notes.md -Encoding utf8
+
+          gh release view $env:TAG_NAME --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $env:TAG_NAME `
+              "$env:APK_PATH#Google Pinyin Input Android 16-17 Compatibility APK" `
+              "$env:APK_PATH.sha256#APK SHA-256 checksum" `
+              --repo $env:GITHUB_REPOSITORY --clobber
+          } else {
+            gh release create $env:TAG_NAME `
+              "$env:APK_PATH#Google Pinyin Input Android 16-17 Compatibility APK" `
+              "$env:APK_PATH.sha256#APK SHA-256 checksum" `
+              --repo $env:GITHUB_REPOSITORY `
+              --verify-tag `
+              --title "Google 拼音输入法 Android 16/17 兼容版 $env:TAG_NAME" `
+              --notes-file release-notes.md
+          }
+
+      - name: Remove restored keystore
+        if: always()
+        shell: pwsh
+        run: Remove-Item work/signing/release.p12 -Force -ErrorAction SilentlyContinue

@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.36.0] - 2026-07-24
+
+对应 Compatibility v42 / versionCode `4520355`，使用独立 localbackupaudit 包验证清除数据或卸载后仍保留的设备本地用户词典导出备份。
+
+### Added
+
+- 在“设置 → 字典 → 用户字典”加入本地自动备份开关、本地目录、频率、保留版本和“立即备份”。
+- 仅接受 Pixel/AOSP 的本地 ExternalStorageProvider，通过 SAF 持久目录授权写入；不接受云端 DocumentsProvider，不上传或同步词条。
+- 完整复用原生中文/英文 `UserDictExportTask` 和 UTF-16LE TSV 格式，先写 `.partial`，校验 BOM/header 后 rename 为正式 `.txt`。
+- 自动配置保存在未注册到旧 `BackupAgent` 的独立 SharedPreferences；清除数据或卸载后配置消失，但公共本地备份文件保留，新装后由用户使用现有“导入用户字典”手动导入。
+- 支持 1/3/7/14/30 天最小间隔、3/5/10/20/30 份轮换以及失败退避；不新增 Alarm、Job、Worker、自动恢复或启动扫描。
+
+### Changed
+
+- 原生用户词典 exporter 与 V41 保存路径共享进程级 dictionary-I/O lock，避免生命周期同步保存与后台导出并发访问 mutable dictionary。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat42-local-dictionary-backup`。
+- 独立测试包名：`com.google.android.inputmethod.pinyin.localbackupaudit`。
+- 测试 APK 已通过 apktool 重建、zipalign 以及 v1/v2/v3 签名校验；构建时设备未连接，因此尚未安装或执行功能测试。
+- 研究与设计：`docs/dictionary-auto-backup-design.md`。
+
 ## [0.35.0] - 2026-07-24
 
 对应 Compatibility v41 / versionCode `4520354`，在独立 dictionaryaudit 包中复核可变词库的滚动保存与故障恢复。

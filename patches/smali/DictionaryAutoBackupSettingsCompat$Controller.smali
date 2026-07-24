@@ -38,7 +38,7 @@
 .method constructor <init>(Landroid/preference/PreferenceFragment;)V
     .registers 2
 
-    .line 49
+    .line 62
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
     iput-object p1, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
@@ -49,7 +49,7 @@
 .method static parse(Ljava/lang/Object;I)I
     .registers 2
 
-    .line 121
+    .line 175
     :try_start_0
     invoke-static {p0}, Ljava/lang/String;->valueOf(Ljava/lang/Object;)Ljava/lang/String;
 
@@ -63,7 +63,7 @@
 
     return p0
 
-    .line 122
+    .line 176
     :catch_9
     move-exception p0
 
@@ -75,7 +75,7 @@
 .method bind()V
     .registers 3
 
-    .line 51
+    .line 64
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
 
     const-string v1, "dictionary_auto_backup_enabled"
@@ -88,7 +88,7 @@
 
     iput-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->enabled:Landroid/preference/TwoStatePreference;
 
-    .line 52
+    .line 65
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
 
     const-string v1, "dictionary_auto_backup_location"
@@ -99,7 +99,7 @@
 
     iput-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->location:Landroid/preference/Preference;
 
-    .line 53
+    .line 66
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
 
     const-string v1, "dictionary_auto_backup_interval_days"
@@ -112,7 +112,7 @@
 
     iput-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->interval:Landroid/preference/ListPreference;
 
-    .line 54
+    .line 67
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
 
     const-string v1, "dictionary_auto_backup_retention_count"
@@ -125,7 +125,7 @@
 
     iput-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->retention:Landroid/preference/ListPreference;
 
-    .line 55
+    .line 68
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
 
     const-string v1, "dictionary_auto_backup_now"
@@ -136,7 +136,7 @@
 
     iput-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->now:Landroid/preference/Preference;
 
-    .line 56
+    .line 69
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
 
     const-string v1, "dictionary_auto_backup_import"
@@ -147,7 +147,7 @@
 
     iput-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->importBackup:Landroid/preference/Preference;
 
-    .line 57
+    .line 70
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->enabled:Landroid/preference/TwoStatePreference;
 
     if-eqz v0, :cond_4b
@@ -156,7 +156,7 @@
 
     invoke-virtual {v0, p0}, Landroid/preference/TwoStatePreference;->setOnPreferenceChangeListener(Landroid/preference/Preference$OnPreferenceChangeListener;)V
 
-    .line 58
+    .line 71
     :cond_4b
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->interval:Landroid/preference/ListPreference;
 
@@ -166,7 +166,7 @@
 
     invoke-virtual {v0, p0}, Landroid/preference/ListPreference;->setOnPreferenceChangeListener(Landroid/preference/Preference$OnPreferenceChangeListener;)V
 
-    .line 59
+    .line 72
     :cond_54
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->retention:Landroid/preference/ListPreference;
 
@@ -176,7 +176,7 @@
 
     invoke-virtual {v0, p0}, Landroid/preference/ListPreference;->setOnPreferenceChangeListener(Landroid/preference/Preference$OnPreferenceChangeListener;)V
 
-    .line 60
+    .line 73
     :cond_5d
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->now:Landroid/preference/Preference;
 
@@ -186,7 +186,7 @@
 
     invoke-virtual {v0, p0}, Landroid/preference/Preference;->setOnPreferenceClickListener(Landroid/preference/Preference$OnPreferenceClickListener;)V
 
-    .line 61
+    .line 74
     :cond_66
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->importBackup:Landroid/preference/Preference;
 
@@ -196,18 +196,116 @@
 
     invoke-virtual {v0, p0}, Landroid/preference/Preference;->setOnPreferenceClickListener(Landroid/preference/Preference$OnPreferenceClickListener;)V
 
-    .line 62
+    .line 75
     :cond_6f
     invoke-virtual {p0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->refresh()V
 
-    .line 63
+    .line 76
+    return-void
+.end method
+
+.method confirmImport(Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$BackupEntry;)V
+    .registers 5
+
+    .line 134
+    iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
+
+    if-eqz v0, :cond_54
+
+    iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
+
+    invoke-virtual {v0}, Landroid/preference/PreferenceFragment;->getActivity()Landroid/app/Activity;
+
+    move-result-object v0
+
+    if-nez v0, :cond_d
+
+    goto :goto_54
+
+    .line 135
+    :cond_d
+    new-instance v0, Landroid/app/AlertDialog$Builder;
+
+    iget-object v1, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
+
+    invoke-virtual {v1}, Landroid/preference/PreferenceFragment;->getActivity()Landroid/app/Activity;
+
+    move-result-object v1
+
+    invoke-direct {v0, v1}, Landroid/app/AlertDialog$Builder;-><init>(Landroid/content/Context;)V
+
+    const-string v1, "\u5bfc\u5165\u7528\u6237\u8bcd\u5178\u5907\u4efd"
+
+    invoke-virtual {v0, v1}, Landroid/app/AlertDialog$Builder;->setTitle(Ljava/lang/CharSequence;)Landroid/app/AlertDialog$Builder;
+
+    move-result-object v0
+
+    new-instance v1, Ljava/lang/StringBuilder;
+
+    invoke-direct {v1}, Ljava/lang/StringBuilder;-><init>()V
+
+    const-string v2, "\u5c06\u201c"
+
+    invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v1
+
+    iget-object v2, p1, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$BackupEntry;->name:Ljava/lang/String;
+
+    invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v1
+
+    const-string v2, "\u201d\u5408\u5e76\u5230\u5f53\u524d\u7528\u6237\u8bcd\u5178\uff1f"
+
+    invoke-virtual {v1, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    move-result-object v1
+
+    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+
+    move-result-object v1
+
+    .line 136
+    invoke-virtual {v0, v1}, Landroid/app/AlertDialog$Builder;->setMessage(Ljava/lang/CharSequence;)Landroid/app/AlertDialog$Builder;
+
+    move-result-object v0
+
+    new-instance v1, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller$2;
+
+    invoke-direct {v1, p0, p1}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller$2;-><init>(Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$BackupEntry;)V
+
+    .line 137
+    const p1, 0x104000a
+
+    invoke-virtual {v0, p1, v1}, Landroid/app/AlertDialog$Builder;->setPositiveButton(ILandroid/content/DialogInterface$OnClickListener;)Landroid/app/AlertDialog$Builder;
+
+    move-result-object p1
+
+    .line 141
+    const/high16 v0, 0x1040000
+
+    const/4 v1, 0x0
+
+    invoke-virtual {p1, v0, v1}, Landroid/app/AlertDialog$Builder;->setNegativeButton(ILandroid/content/DialogInterface$OnClickListener;)Landroid/app/AlertDialog$Builder;
+
+    move-result-object p1
+
+    invoke-virtual {p1}, Landroid/app/AlertDialog$Builder;->show()Landroid/app/AlertDialog;
+
+    .line 142
+    return-void
+
+    .line 134
+    :cond_54
+    :goto_54
     return-void
 .end method
 
 .method context()Landroid/content/Context;
     .registers 2
 
-    .line 66
+    .line 79
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
 
     if-eqz v0, :cond_18
@@ -222,7 +320,7 @@
 
     goto :goto_18
 
-    .line 67
+    .line 80
     :cond_d
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
 
@@ -236,7 +334,7 @@
 
     goto :goto_19
 
-    .line 66
+    .line 79
     :cond_18
     :goto_18
     const/4 v0, 0x0
@@ -248,7 +346,7 @@
 .method destroy()V
     .registers 2
 
-    .line 64
+    .line 77
     const/4 v0, 0x0
 
     iput-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
@@ -259,7 +357,7 @@
 
     iput-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->interval:Landroid/preference/ListPreference;
 
-    .line 65
+    .line 78
     iput-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->retention:Landroid/preference/ListPreference;
 
     iput-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->now:Landroid/preference/Preference;
@@ -272,7 +370,7 @@
 .method public onPreferenceChange(Landroid/preference/Preference;Ljava/lang/Object;)Z
     .registers 8
 
-    .line 77
+    .line 89
     invoke-virtual {p0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->context()Landroid/content/Context;
 
     move-result-object v0
@@ -283,27 +381,27 @@
 
     return v1
 
-    .line 78
+    .line 90
     :cond_8
     invoke-static {v0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->prefs(Landroid/content/Context;)Landroid/content/SharedPreferences;
 
     move-result-object v2
 
-    .line 79
+    .line 91
     iget-object v3, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->enabled:Landroid/preference/TwoStatePreference;
 
     const/4 v4, 0x1
 
     if-ne p1, v3, :cond_2d
 
-    .line 80
+    .line 92
     sget-object p1, Ljava/lang/Boolean;->TRUE:Ljava/lang/Boolean;
 
     invoke-virtual {p1, p2}, Ljava/lang/Boolean;->equals(Ljava/lang/Object;)Z
 
     move-result p1
 
-    .line 81
+    .line 93
     invoke-interface {v2}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
 
     move-result-object p2
@@ -316,24 +414,24 @@
 
     invoke-interface {p2}, Landroid/content/SharedPreferences$Editor;->apply()V
 
-    .line 82
+    .line 94
     if-eqz p1, :cond_29
 
     invoke-static {v0, v4}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->request(Landroid/content/Context;Z)V
 
-    .line 83
+    .line 95
     :cond_29
     invoke-virtual {p0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->refreshSoon()V
 
     return v4
 
-    .line 85
+    .line 97
     :cond_2d
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->interval:Landroid/preference/ListPreference;
 
     if-ne p1, v0, :cond_47
 
-    .line 86
+    .line 98
     invoke-interface {v2}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
 
     move-result-object p1
@@ -352,18 +450,18 @@
 
     invoke-interface {p1}, Landroid/content/SharedPreferences$Editor;->apply()V
 
-    .line 87
+    .line 99
     invoke-virtual {p0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->refreshSoon()V
 
     return v4
 
-    .line 89
+    .line 101
     :cond_47
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->retention:Landroid/preference/ListPreference;
 
     if-ne p1, v0, :cond_62
 
-    .line 90
+    .line 102
     invoke-interface {v2}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
 
     move-result-object p1
@@ -382,20 +480,20 @@
 
     invoke-interface {p1}, Landroid/content/SharedPreferences$Editor;->apply()V
 
-    .line 91
+    .line 103
     invoke-virtual {p0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->refreshSoon()V
 
     return v4
 
-    .line 93
+    .line 105
     :cond_62
     return v1
 .end method
 
 .method public onPreferenceClick(Landroid/preference/Preference;)Z
-    .registers 6
+    .registers 5
 
-    .line 70
+    .line 83
     invoke-virtual {p0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->context()Landroid/content/Context;
 
     move-result-object v0
@@ -406,7 +504,7 @@
 
     return v1
 
-    .line 71
+    .line 84
     :cond_8
     iget-object v2, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->now:Landroid/preference/Preference;
 
@@ -414,42 +512,266 @@
 
     invoke-static {v0, v1}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->request(Landroid/content/Context;Z)V
 
-    goto :goto_26
+    goto :goto_18
 
-    .line 72
+    .line 85
     :cond_10
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->importBackup:Landroid/preference/Preference;
 
-    if-ne p1, v0, :cond_26
+    if-ne p1, v0, :cond_18
+
+    const/4 p1, 0x0
+
+    invoke-virtual {p0, p1}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->openImportList(Z)V
+
+    .line 86
+    :cond_18
+    :goto_18
+    return v1
+.end method
+
+.method onStoragePermissionResult([I)V
+    .registers 4
+
+    .line 144
+    const/4 v0, 0x1
+
+    if-eqz p1, :cond_f
+
+    array-length v1, p1
+
+    if-lez v1, :cond_f
+
+    const/4 v1, 0x0
+
+    aget p1, p1, v1
+
+    if-nez p1, :cond_f
+
+    .line 145
+    invoke-virtual {p0, v0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->openImportList(Z)V
+
+    goto :goto_1e
+
+    .line 146
+    :cond_f
+    invoke-virtual {p0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->context()Landroid/content/Context;
+
+    move-result-object p1
+
+    if-eqz p1, :cond_1e
+
+    const-string v1, "\u9700\u8981\u6587\u4ef6\u6743\u9650\u8bfb\u53d6\u5378\u8f7d\u524d\u4fdd\u7559\u7684\u672c\u5730\u5907\u4efd"
+
+    invoke-static {p1, v1, v0}, Landroid/widget/Toast;->makeText(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;
+
+    move-result-object p1
+
+    .line 147
+    invoke-virtual {p1}, Landroid/widget/Toast;->show()V
+
+    .line 148
+    :cond_1e
+    :goto_1e
+    return-void
+.end method
+
+.method openImportList(Z)V
+    .registers 7
+
+    .line 108
+    invoke-virtual {p0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->context()Landroid/content/Context;
+
+    move-result-object v0
+
+    if-eqz v0, :cond_9e
+
+    iget-object v1, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
+
+    if-nez v1, :cond_c
+
+    goto/16 :goto_9e
+
+    .line 109
+    :cond_c
+    nop
+
+    .line 110
+    invoke-static {v0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->listBackups(Landroid/content/Context;)Ljava/util/List;
+
+    move-result-object v0
+
+    .line 111
+    invoke-interface {v0}, Ljava/util/List;->isEmpty()Z
+
+    move-result v1
+
+    const/4 v2, 0x0
+
+    if-eqz v1, :cond_3b
+
+    if-nez p1, :cond_3b
+
+    sget p1, Landroid/os/Build$VERSION;->SDK_INT:I
+
+    const/16 v1, 0x17
+
+    if-lt p1, v1, :cond_3b
 
     iget-object p1, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
 
-    new-instance v0, Landroid/content/Intent;
+    .line 112
+    invoke-virtual {p1}, Landroid/preference/PreferenceFragment;->getActivity()Landroid/app/Activity;
+
+    move-result-object p1
+
+    const-string v1, "android.permission.WRITE_EXTERNAL_STORAGE"
+
+    invoke-virtual {p1, v1}, Landroid/app/Activity;->checkSelfPermission(Ljava/lang/String;)I
+
+    move-result p1
+
+    if-eqz p1, :cond_3b
+
+    .line 114
+    iget-object p1, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
+
+    const/4 v0, 0x1
+
+    new-array v0, v0, [Ljava/lang/String;
+
+    aput-object v1, v0, v2
+
+    const/16 v1, 0x6b02
+
+    invoke-virtual {p1, v0, v1}, Landroid/preference/PreferenceFragment;->requestPermissions([Ljava/lang/String;I)V
+
+    .line 116
+    return-void
+
+    .line 118
+    :cond_3b
+    invoke-interface {v0}, Ljava/util/List;->isEmpty()Z
+
+    move-result p1
+
+    const/4 v1, 0x0
+
+    if-eqz p1, :cond_64
+
+    .line 119
+    new-instance p1, Landroid/app/AlertDialog$Builder;
+
+    iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
+
+    invoke-virtual {v0}, Landroid/preference/PreferenceFragment;->getActivity()Landroid/app/Activity;
+
+    move-result-object v0
+
+    invoke-direct {p1, v0}, Landroid/app/AlertDialog$Builder;-><init>(Landroid/content/Context;)V
+
+    const-string v0, "\u6ca1\u6709\u53ef\u8bbf\u95ee\u7684\u672c\u5730\u5907\u4efd"
+
+    invoke-virtual {p1, v0}, Landroid/app/AlertDialog$Builder;->setTitle(Ljava/lang/CharSequence;)Landroid/app/AlertDialog$Builder;
+
+    move-result-object p1
+
+    .line 120
+    const-string v0, "Documents/GooglePinyinBackup \u4e2d\u6ca1\u6709\u53ef\u5217\u51fa\u7684\u5907\u4efd\u3002\u5378\u8f7d\u91cd\u88c5\u540e\u4e5f\u53ef\u4ee5\u5728 File Geek \u4e2d\u6253\u5f00\u6216\u5206\u4eab .txt \u5230 Google \u62fc\u97f3\u3002"
+
+    invoke-virtual {p1, v0}, Landroid/app/AlertDialog$Builder;->setMessage(Ljava/lang/CharSequence;)Landroid/app/AlertDialog$Builder;
+
+    move-result-object p1
+
+    .line 121
+    const v0, 0x104000a
+
+    invoke-virtual {p1, v0, v1}, Landroid/app/AlertDialog$Builder;->setPositiveButton(ILandroid/content/DialogInterface$OnClickListener;)Landroid/app/AlertDialog$Builder;
+
+    move-result-object p1
+
+    invoke-virtual {p1}, Landroid/app/AlertDialog$Builder;->show()Landroid/app/AlertDialog;
+
+    .line 122
+    return-void
+
+    .line 124
+    :cond_64
+    invoke-interface {v0}, Ljava/util/List;->size()I
+
+    move-result p1
+
+    new-array v3, p1, [Ljava/lang/String;
+
+    .line 125
+    nop
+
+    :goto_6b
+    if-ge v2, p1, :cond_7a
+
+    invoke-interface {v0, v2}, Ljava/util/List;->get(I)Ljava/lang/Object;
+
+    move-result-object v4
+
+    check-cast v4, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$BackupEntry;
+
+    iget-object v4, v4, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$BackupEntry;->name:Ljava/lang/String;
+
+    aput-object v4, v3, v2
+
+    add-int/lit8 v2, v2, 0x1
+
+    goto :goto_6b
+
+    .line 126
+    :cond_7a
+    new-instance p1, Landroid/app/AlertDialog$Builder;
 
     iget-object v2, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
 
-    .line 73
     invoke-virtual {v2}, Landroid/preference/PreferenceFragment;->getActivity()Landroid/app/Activity;
 
     move-result-object v2
 
-    const-class v3, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity;
+    invoke-direct {p1, v2}, Landroid/app/AlertDialog$Builder;-><init>(Landroid/content/Context;)V
 
-    invoke-direct {v0, v2, v3}, Landroid/content/Intent;-><init>(Landroid/content/Context;Ljava/lang/Class;)V
+    const-string v2, "\u5bfc\u5165\u672c\u5730\u5907\u4efd"
 
-    .line 72
-    invoke-virtual {p1, v0}, Landroid/preference/PreferenceFragment;->startActivity(Landroid/content/Intent;)V
+    invoke-virtual {p1, v2}, Landroid/app/AlertDialog$Builder;->setTitle(Ljava/lang/CharSequence;)Landroid/app/AlertDialog$Builder;
 
-    .line 74
-    :cond_26
-    :goto_26
-    return v1
+    move-result-object p1
+
+    new-instance v2, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller$1;
+
+    invoke-direct {v2, p0, v0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller$1;-><init>(Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;Ljava/util/List;)V
+
+    .line 127
+    invoke-virtual {p1, v3, v2}, Landroid/app/AlertDialog$Builder;->setItems([Ljava/lang/CharSequence;Landroid/content/DialogInterface$OnClickListener;)Landroid/app/AlertDialog$Builder;
+
+    move-result-object p1
+
+    .line 131
+    const/high16 v0, 0x1040000
+
+    invoke-virtual {p1, v0, v1}, Landroid/app/AlertDialog$Builder;->setNegativeButton(ILandroid/content/DialogInterface$OnClickListener;)Landroid/app/AlertDialog$Builder;
+
+    move-result-object p1
+
+    invoke-virtual {p1}, Landroid/app/AlertDialog$Builder;->show()Landroid/app/AlertDialog;
+
+    .line 132
+    return-void
+
+    .line 108
+    :cond_9e
+    :goto_9e
+    return-void
 .end method
 
 .method refresh()V
     .registers 13
 
-    .line 96
+    .line 150
     invoke-virtual {p0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->context()Landroid/content/Context;
 
     move-result-object v0
@@ -458,13 +780,13 @@
 
     return-void
 
-    .line 97
+    .line 151
     :cond_7
     invoke-static {v0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->prefs(Landroid/content/Context;)Landroid/content/SharedPreferences;
 
     move-result-object v1
 
-    .line 98
+    .line 152
     sget v2, Landroid/os/Build$VERSION;->SDK_INT:I
 
     const/16 v3, 0x1d
@@ -482,7 +804,7 @@
     :cond_15
     const/4 v2, 0x0
 
-    .line 99
+    .line 153
     :goto_16
     const-string v3, "dictionary_auto_backup_enabled"
 
@@ -490,12 +812,12 @@
 
     move-result v3
 
-    .line 100
+    .line 154
     iget-object v6, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->enabled:Landroid/preference/TwoStatePreference;
 
     if-eqz v6, :cond_9d
 
-    .line 101
+    .line 155
     iget-object v6, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->enabled:Landroid/preference/TwoStatePreference;
 
     invoke-virtual {v6, v3}, Landroid/preference/TwoStatePreference;->setChecked(Z)V
@@ -504,7 +826,7 @@
 
     invoke-virtual {v6, v2}, Landroid/preference/TwoStatePreference;->setEnabled(Z)V
 
-    .line 102
+    .line 156
     const-string v6, "dictionary_auto_backup_last_status"
 
     const/4 v7, 0x0
@@ -513,7 +835,7 @@
 
     move-result-object v6
 
-    .line 103
+    .line 157
     const-string v7, "dictionary_auto_backup_last_success_time"
 
     const-wide/16 v8, 0x0
@@ -522,7 +844,7 @@
 
     move-result-wide v10
 
-    .line 104
+    .line 158
     invoke-static {}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->isInProgress()Z
 
     move-result v7
@@ -537,7 +859,7 @@
 
     goto :goto_9d
 
-    .line 105
+    .line 159
     :cond_47
     if-eqz v6, :cond_57
 
@@ -555,7 +877,7 @@
 
     goto :goto_9d
 
-    .line 106
+    .line 160
     :cond_57
     cmp-long v6, v10, v8
 
@@ -573,7 +895,7 @@
 
     move-result-object v7
 
-    .line 107
+    .line 161
     invoke-static {v0}, Landroid/text/format/DateFormat;->getDateFormat(Landroid/content/Context;)Ljava/text/DateFormat;
 
     move-result-object v8
@@ -596,7 +918,7 @@
 
     move-result-object v7
 
-    .line 108
+    .line 162
     invoke-static {v0}, Landroid/text/format/DateFormat;->getTimeFormat(Landroid/content/Context;)Ljava/text/DateFormat;
 
     move-result-object v0
@@ -617,12 +939,12 @@
 
     move-result-object v0
 
-    .line 106
+    .line 160
     invoke-virtual {v6, v0}, Landroid/preference/TwoStatePreference;->setSummary(Ljava/lang/CharSequence;)V
 
     goto :goto_9d
 
-    .line 109
+    .line 163
     :cond_96
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->enabled:Landroid/preference/TwoStatePreference;
 
@@ -630,7 +952,7 @@
 
     invoke-virtual {v0, v6}, Landroid/preference/TwoStatePreference;->setSummary(Ljava/lang/CharSequence;)V
 
-    .line 111
+    .line 165
     :cond_9d
     :goto_9d
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->location:Landroid/preference/Preference;
@@ -647,7 +969,7 @@
 
     invoke-virtual {v0, v5}, Landroid/preference/Preference;->setEnabled(Z)V
 
-    .line 112
+    .line 166
     :cond_ad
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->interval:Landroid/preference/ListPreference;
 
@@ -685,7 +1007,7 @@
     :goto_ca
     invoke-virtual {v0, v6}, Landroid/preference/ListPreference;->setEnabled(Z)V
 
-    .line 113
+    .line 167
     :cond_cd
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->retention:Landroid/preference/ListPreference;
 
@@ -723,7 +1045,7 @@
     :goto_eb
     invoke-virtual {v0, v1}, Landroid/preference/ListPreference;->setEnabled(Z)V
 
-    .line 114
+    .line 168
     :cond_ee
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->now:Landroid/preference/Preference;
 
@@ -753,7 +1075,7 @@
 
     invoke-virtual {v0, v1}, Landroid/preference/Preference;->setSummary(Ljava/lang/CharSequence;)V
 
-    .line 115
+    .line 169
     :cond_108
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->importBackup:Landroid/preference/Preference;
 
@@ -765,7 +1087,7 @@
 
     invoke-virtual {v0, v1}, Landroid/preference/Preference;->setSummary(Ljava/lang/CharSequence;)V
 
-    .line 116
+    .line 170
     :cond_113
     return-void
 .end method
@@ -773,7 +1095,7 @@
 .method refreshSoon()V
     .registers 3
 
-    .line 117
+    .line 171
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
 
     if-eqz v0, :cond_22
@@ -786,7 +1108,7 @@
 
     if-eqz v0, :cond_22
 
-    .line 118
+    .line 172
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->fragment:Landroid/preference/PreferenceFragment;
 
     invoke-virtual {v0}, Landroid/preference/PreferenceFragment;->getActivity()Landroid/app/Activity;
@@ -801,13 +1123,13 @@
 
     move-result-object v0
 
-    new-instance v1, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller$1;
+    new-instance v1, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller$3;
 
-    invoke-direct {v1, p0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller$1;-><init>(Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;)V
+    invoke-direct {v1, p0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller$3;-><init>(Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;)V
 
     invoke-virtual {v0, v1}, Landroid/view/View;->post(Ljava/lang/Runnable;)Z
 
-    .line 120
+    .line 174
     :cond_22
     return-void
 .end method

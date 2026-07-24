@@ -51,6 +51,21 @@
     return-void
 .end method
 
+.method public onRequestPermissionsResult(I[Ljava/lang/String;[I)V
+    .locals 1
+
+    invoke-static {p0, p1, p2, p3}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat;->handleRequestPermissionsResult(Landroid/preference/PreferenceFragment;I[Ljava/lang/String;[I)Z
+
+    move-result v0
+
+    if-nez v0, :permission_handled
+
+    invoke-super {p0, p1, p2, p3}, Lado;->onRequestPermissionsResult(I[Ljava/lang/String;[I)V
+
+    :permission_handled
+    return-void
+.end method
+
 .method public onResume()V
     .locals 0
 

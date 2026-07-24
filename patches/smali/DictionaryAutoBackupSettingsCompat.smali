@@ -25,12 +25,14 @@
 
 .field private static final KEY_LOCATION:Ljava/lang/String; = "dictionary_auto_backup_location"
 
+.field private static final REQUEST_STORAGE:I = 0x6b02
+
 
 # direct methods
 .method static constructor <clinit>()V
     .registers 1
 
-    .line 21
+    .line 27
     new-instance v0, Ljava/util/WeakHashMap;
 
     invoke-direct {v0}, Ljava/util/WeakHashMap;-><init>()V
@@ -43,7 +45,7 @@
 .method private constructor <init>()V
     .registers 1
 
-    .line 23
+    .line 29
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
     return-void
@@ -52,7 +54,7 @@
 .method public static bind(Landroid/preference/PreferenceFragment;)V
     .registers 4
 
-    .line 26
+    .line 32
     if-eqz p0, :cond_2b
 
     invoke-virtual {p0}, Landroid/preference/PreferenceFragment;->getActivity()Landroid/app/Activity;
@@ -63,13 +65,13 @@
 
     goto :goto_2b
 
-    .line 27
+    .line 33
     :cond_9
     sget-object v0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat;->CONTROLLERS:Ljava/util/Map;
 
     monitor-enter v0
 
-    .line 28
+    .line 34
     :try_start_c
     sget-object v1, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat;->CONTROLLERS:Ljava/util/Map;
 
@@ -83,7 +85,7 @@
 
     invoke-virtual {v1}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->destroy()V
 
-    .line 29
+    .line 35
     :cond_19
     new-instance v1, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;
 
@@ -95,13 +97,13 @@
 
     invoke-virtual {v1}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->bind()V
 
-    .line 30
+    .line 36
     monitor-exit v0
 
-    .line 31
+    .line 37
     return-void
 
-    .line 30
+    .line 36
     :catchall_28
     move-exception p0
 
@@ -111,7 +113,7 @@
 
     throw p0
 
-    .line 26
+    .line 32
     :cond_2b
     :goto_2b
     return-void
@@ -120,16 +122,70 @@
 .method public static handleActivityResult(Landroid/preference/PreferenceFragment;IILandroid/content/Intent;)Z
     .registers 4
 
-    .line 32
+    .line 38
     const/4 p0, 0x0
 
     return p0
 .end method
 
+.method public static handleRequestPermissionsResult(Landroid/preference/PreferenceFragment;I[Ljava/lang/String;[I)Z
+    .registers 4
+
+    .line 41
+    const/16 p2, 0x6b02
+
+    if-eq p1, p2, :cond_6
+
+    const/4 p0, 0x0
+
+    return p0
+
+    .line 42
+    :cond_6
+    sget-object p1, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat;->CONTROLLERS:Ljava/util/Map;
+
+    monitor-enter p1
+
+    :try_start_9
+    sget-object p2, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat;->CONTROLLERS:Ljava/util/Map;
+
+    invoke-interface {p2, p0}, Ljava/util/Map;->get(Ljava/lang/Object;)Ljava/lang/Object;
+
+    move-result-object p0
+
+    check-cast p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;
+
+    monitor-exit p1
+    :try_end_12
+    .catchall {:try_start_9 .. :try_end_12} :catchall_19
+
+    .line 43
+    if-eqz p0, :cond_17
+
+    invoke-virtual {p0, p3}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->onStoragePermissionResult([I)V
+
+    .line 44
+    :cond_17
+    const/4 p0, 0x1
+
+    return p0
+
+    .line 42
+    :catchall_19
+    move-exception p0
+
+    :try_start_1a
+    monitor-exit p1
+    :try_end_1b
+    .catchall {:try_start_1a .. :try_end_1b} :catchall_19
+
+    throw p0
+.end method
+
 .method public static refresh(Landroid/preference/PreferenceFragment;)V
     .registers 3
 
-    .line 34
+    .line 47
     sget-object v0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat;->CONTROLLERS:Ljava/util/Map;
 
     monitor-enter v0
@@ -147,16 +203,16 @@
     :try_end_c
     .catchall {:try_start_3 .. :try_end_c} :catchall_12
 
-    .line 35
+    .line 48
     if-eqz p0, :cond_11
 
     invoke-virtual {p0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat$Controller;->refresh()V
 
-    .line 36
+    .line 49
     :cond_11
     return-void
 
-    .line 34
+    .line 47
     :catchall_12
     move-exception p0
 
@@ -171,7 +227,7 @@
 .method static refreshAll()V
     .registers 3
 
-    .line 41
+    .line 54
     sget-object v0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat;->CONTROLLERS:Ljava/util/Map;
 
     monitor-enter v0
@@ -191,7 +247,7 @@
     :try_end_f
     .catchall {:try_start_3 .. :try_end_f} :catchall_24
 
-    .line 42
+    .line 55
     invoke-interface {v1}, Ljava/util/List;->iterator()Ljava/util/Iterator;
 
     move-result-object v0
@@ -213,11 +269,11 @@
 
     goto :goto_13
 
-    .line 43
+    .line 56
     :cond_23
     return-void
 
-    .line 41
+    .line 54
     :catchall_24
     move-exception v1
 
@@ -238,7 +294,7 @@
 .method public static unbind(Landroid/preference/PreferenceFragment;)V
     .registers 3
 
-    .line 38
+    .line 51
     sget-object v0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat;->CONTROLLERS:Ljava/util/Map;
 
     monitor-enter v0
@@ -259,10 +315,10 @@
     :cond_10
     monitor-exit v0
 
-    .line 39
+    .line 52
     return-void
 
-    .line 38
+    .line 51
     :catchall_12
     move-exception p0
 

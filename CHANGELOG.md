@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.40.0] - 2026-07-24
+
+对应 Compatibility v46 / versionCode `4520359`，把固定目录备份列表整合回字典设置页，并补齐卸载重装后的文件权限请求。
+
+### Fixed
+
+- “导入本地备份”不再启动单独页面，改为在当前字典设置页显示与频率/版本数选择一致的单选列表对话框；选择版本后再就地确认导入。
+- 当前安装无法列出旧 MediaStore 文件且尚未授权时，由新入口直接申请旧框架相同的 `WRITE_EXTERNAL_STORAGE` 文件权限；授权成功后自动重新加载备份列表，不再要求先点击旧导入入口。
+- 保留导出文件从 File Geek 通过 `ACTION_VIEW` / `ACTION_SEND` 打开到 Google 拼音的外部恢复入口。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat46-integrated-backup-import`。
+- 独立测试包名：`com.google.android.inputmethod.pinyin.localbackupaudit`。
+
 ## [0.39.0] - 2026-07-24
 
 对应 Compatibility v45 / versionCode `4520358`，移除不可用的 DocumentsUI 目录选择依赖，改为固定 Documents 本地备份和显式手动导入。

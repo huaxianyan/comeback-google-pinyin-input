@@ -42,13 +42,17 @@
 .method public onClick(Landroid/content/DialogInterface;I)V
     .registers 3
 
-    .line 68
+    .line 69
     iget-object p1, p0, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity$8;->this$0:Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity;
 
     iget-object p2, p0, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity$8;->val$uri:Landroid/net/Uri;
 
-    # invokes: Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity;->startImport(Landroid/net/Uri;)V
-    invoke-static {p1, p2}, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity;->access$100(Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity;Landroid/net/Uri;)V
+    invoke-static {p1, p2}, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity;->startNativeImport(Landroid/content/Context;Landroid/net/Uri;)Z
 
+    iget-object p1, p0, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity$8;->this$0:Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity;
+
+    invoke-virtual {p1}, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity;->finish()V
+
+    .line 70
     return-void
 .end method

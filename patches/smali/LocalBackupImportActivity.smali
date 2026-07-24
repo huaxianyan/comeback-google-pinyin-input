@@ -30,15 +30,6 @@
     return-void
 .end method
 
-.method static synthetic access$100(Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity;Landroid/net/Uri;)V
-    .registers 2
-
-    .line 19
-    invoke-direct {p0, p1}, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity;->startImport(Landroid/net/Uri;)V
-
-    return-void
-.end method
-
 .method private confirm(Landroid/net/Uri;Ljava/lang/String;)V
     .registers 6
 
@@ -97,7 +88,7 @@
 
     invoke-direct {p2, p0}, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity$7;-><init>(Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity;)V
 
-    .line 69
+    .line 71
     const/high16 v0, 0x1040000
 
     invoke-virtual {p1, v0, p2}, Landroid/app/AlertDialog$Builder;->setNegativeButton(ILandroid/content/DialogInterface$OnClickListener;)Landroid/app/AlertDialog$Builder;
@@ -108,15 +99,15 @@
 
     invoke-direct {p2, p0}, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity$6;-><init>(Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity;)V
 
-    .line 71
+    .line 73
     invoke-virtual {p1, p2}, Landroid/app/AlertDialog$Builder;->setOnCancelListener(Landroid/content/DialogInterface$OnCancelListener;)Landroid/app/AlertDialog$Builder;
 
     move-result-object p1
 
-    .line 73
+    .line 75
     invoke-virtual {p1}, Landroid/app/AlertDialog$Builder;->show()Landroid/app/AlertDialog;
 
-    .line 74
+    .line 76
     return-void
 .end method
 
@@ -326,165 +317,161 @@
     return-void
 .end method
 
-.method private startImport(Landroid/net/Uri;)V
-    .registers 14
-
-    .line 77
-    const-string v0, "a"
-
-    invoke-virtual {p0}, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity;->getApplicationContext()Landroid/content/Context;
-
-    move-result-object v1
+.method static startNativeImport(Landroid/content/Context;Landroid/net/Uri;)Z
+    .registers 13
 
     .line 79
-    const/4 v2, 0x1
+    const-string v0, "a"
 
-    :try_start_7
+    invoke-virtual {p0}, Landroid/content/Context;->getApplicationContext()Landroid/content/Context;
+
+    move-result-object p0
+
+    .line 81
+    const/4 v1, 0x1
+
+    const/4 v2, 0x0
+
+    :try_start_8
     const-string v3, "aib"
 
     invoke-static {v3}, Ljava/lang/Class;->forName(Ljava/lang/String;)Ljava/lang/Class;
 
     move-result-object v3
 
-    .line 80
-    const/4 v4, 0x0
+    .line 82
+    new-array v4, v2, [Ljava/lang/Class;
 
-    new-array v5, v4, [Ljava/lang/Class;
+    invoke-virtual {v3, v0, v4}, Ljava/lang/Class;->getMethod(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;
 
-    invoke-virtual {v3, v0, v5}, Ljava/lang/Class;->getMethod(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;
+    move-result-object v4
+
+    new-array v5, v2, [Ljava/lang/Object;
+
+    const/4 v6, 0x0
+
+    invoke-virtual {v4, v6, v5}, Ljava/lang/reflect/Method;->invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;
+
+    move-result-object v4
+
+    .line 83
+    const-string v5, "com.google.android.apps.inputmethod.libs.framework.core.TaskFactory"
+
+    invoke-static {v5}, Ljava/lang/Class;->forName(Ljava/lang/String;)Ljava/lang/Class;
 
     move-result-object v5
 
-    new-array v6, v4, [Ljava/lang/Object;
-
-    const/4 v7, 0x0
-
-    invoke-virtual {v5, v7, v6}, Ljava/lang/reflect/Method;->invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;
-
-    move-result-object v5
-
-    .line 81
-    const-string v6, "com.google.android.apps.inputmethod.libs.framework.core.TaskFactory"
+    .line 85
+    const-string v6, "beh"
 
     invoke-static {v6}, Ljava/lang/Class;->forName(Ljava/lang/String;)Ljava/lang/Class;
 
     move-result-object v6
 
-    .line 83
-    const-string v7, "beh"
+    const/4 v7, 0x3
 
-    invoke-static {v7}, Ljava/lang/Class;->forName(Ljava/lang/String;)Ljava/lang/Class;
+    new-array v8, v7, [Ljava/lang/Class;
 
-    move-result-object v7
+    const-class v9, Landroid/content/Context;
 
-    const/4 v8, 0x3
+    aput-object v9, v8, v2
 
-    new-array v9, v8, [Ljava/lang/Class;
+    const-class v9, Lcom/google/android/apps/inputmethod/libs/framework/core/TaskListener;
 
-    const-class v10, Landroid/content/Context;
+    aput-object v9, v8, v1
 
-    aput-object v10, v9, v4
+    const-class v9, Landroid/net/Uri;
 
-    const-class v10, Lcom/google/android/apps/inputmethod/libs/framework/core/TaskListener;
+    const/4 v10, 0x2
 
-    aput-object v10, v9, v2
+    aput-object v9, v8, v10
 
-    const-class v10, Landroid/net/Uri;
+    invoke-virtual {v6, v8}, Ljava/lang/Class;->getConstructor([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;
 
-    const/4 v11, 0x2
+    move-result-object v6
 
-    aput-object v10, v9, v11
+    .line 87
+    new-instance v8, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity$ImportListener;
 
-    invoke-virtual {v7, v9}, Ljava/lang/Class;->getConstructor([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;
+    invoke-direct {v8, p0}, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity$ImportListener;-><init>(Landroid/content/Context;)V
 
-    move-result-object v7
+    new-array v9, v7, [Ljava/lang/Object;
 
-    .line 85
-    new-instance v9, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity$ImportListener;
+    aput-object p0, v9, v2
 
-    invoke-direct {v9, v1}, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity$ImportListener;-><init>(Landroid/content/Context;)V
+    aput-object v8, v9, v1
 
-    new-array v10, v8, [Ljava/lang/Object;
+    aput-object p1, v9, v10
 
-    aput-object v1, v10, v4
-
-    aput-object v9, v10, v2
-
-    aput-object p1, v10, v11
-
-    invoke-virtual {v7, v10}, Ljava/lang/reflect/Constructor;->newInstance([Ljava/lang/Object;)Ljava/lang/Object;
+    invoke-virtual {v6, v9}, Ljava/lang/reflect/Constructor;->newInstance([Ljava/lang/Object;)Ljava/lang/Object;
 
     move-result-object p1
 
-    .line 86
-    new-array v7, v8, [Ljava/lang/Class;
+    .line 88
+    new-array v6, v7, [Ljava/lang/Class;
 
-    const-class v9, Ljava/lang/String;
+    const-class v8, Ljava/lang/String;
 
-    aput-object v9, v7, v4
+    aput-object v8, v6, v2
 
-    aput-object v6, v7, v2
+    aput-object v5, v6, v1
 
-    sget-object v6, Ljava/lang/Long;->TYPE:Ljava/lang/Class;
+    sget-object v5, Ljava/lang/Long;->TYPE:Ljava/lang/Class;
 
-    aput-object v6, v7, v11
+    aput-object v5, v6, v10
 
-    invoke-virtual {v3, v0, v7}, Ljava/lang/Class;->getMethod(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;
+    invoke-virtual {v3, v0, v6}, Ljava/lang/Class;->getMethod(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;
 
     move-result-object v0
 
-    .line 87
-    const-wide/16 v6, 0x0
+    .line 89
+    const-wide/16 v5, 0x0
 
-    invoke-static {v6, v7}, Ljava/lang/Long;->valueOf(J)Ljava/lang/Long;
+    invoke-static {v5, v6}, Ljava/lang/Long;->valueOf(J)Ljava/lang/Long;
 
     move-result-object v3
 
-    new-array v6, v8, [Ljava/lang/Object;
+    new-array v5, v7, [Ljava/lang/Object;
 
-    const-string v7, "user_dict_import"
+    const-string v6, "user_dict_import"
 
-    aput-object v7, v6, v4
+    aput-object v6, v5, v2
 
-    aput-object p1, v6, v2
+    aput-object p1, v5, v1
 
-    aput-object v3, v6, v11
+    aput-object v3, v5, v10
 
-    invoke-virtual {v0, v5, v6}, Ljava/lang/reflect/Method;->invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;
+    invoke-virtual {v0, v4, v5}, Ljava/lang/reflect/Method;->invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;
 
-    .line 88
+    .line 90
     const-string p1, "\u6b63\u5728\u5bfc\u5165\u672c\u5730\u7528\u6237\u8bcd\u5178\u5907\u4efd"
 
-    invoke-static {v1, p1, v4}, Landroid/widget/Toast;->makeText(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;
+    invoke-static {p0, p1, v2}, Landroid/widget/Toast;->makeText(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;
 
     move-result-object p1
 
     invoke-virtual {p1}, Landroid/widget/Toast;->show()V
     :try_end_78
-    .catchall {:try_start_7 .. :try_end_78} :catchall_79
+    .catchall {:try_start_8 .. :try_end_78} :catchall_79
 
     .line 91
-    goto :goto_83
+    return v1
 
-    .line 89
+    .line 92
     :catchall_79
     move-exception p1
 
-    .line 90
+    .line 93
     const-string p1, "\u65e0\u6cd5\u542f\u52a8\u539f\u751f\u7528\u6237\u8bcd\u5178\u5bfc\u5165"
 
-    invoke-static {v1, p1, v2}, Landroid/widget/Toast;->makeText(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;
+    invoke-static {p0, p1, v1}, Landroid/widget/Toast;->makeText(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;
 
-    move-result-object p1
+    move-result-object p0
 
-    invoke-virtual {p1}, Landroid/widget/Toast;->show()V
+    invoke-virtual {p0}, Landroid/widget/Toast;->show()V
 
-    .line 92
-    :goto_83
-    invoke-virtual {p0}, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity;->finish()V
-
-    .line 93
-    return-void
+    .line 94
+    return v2
 .end method
 
 

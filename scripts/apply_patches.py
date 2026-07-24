@@ -46,8 +46,8 @@ def apply(decoded: Path, application_id: str) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520358\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat45-fixed-documents-backup",
+        "versionInfo:\n  versionCode: 4520359\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat46-integrated-backup-import",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -1452,7 +1452,7 @@ def apply(decoded: Path, application_id: str) -> None:
         raise RuntimeError(f"Refusing to overwrite existing helper: {candidate_dst}")
     shutil.copyfile(candidate_src, candidate_dst)
 
-    print(f"Applied compatibility v45 fixed Documents backup to {decoded} ({application_id})")
+    print(f"Applied compatibility v46 integrated backup import to {decoded} ({application_id})")
 
 
 def main() -> None:

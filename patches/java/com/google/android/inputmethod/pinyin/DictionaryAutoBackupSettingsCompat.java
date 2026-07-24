@@ -1,14 +1,19 @@
 package com.google.android.inputmethod.pinyin;
 
+import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.TwoStatePreference;
 import android.text.format.DateFormat;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +23,7 @@ import java.util.WeakHashMap;
 /** Binds fixed-path local backup controls. */
 public final class DictionaryAutoBackupSettingsCompat {
     private static final String KEY_LOCATION = "dictionary_auto_backup_location";
+    private static final int REQUEST_STORAGE = 0x6b02;
     private static final Map<PreferenceFragment, Controller> CONTROLLERS =
             new WeakHashMap<PreferenceFragment, Controller>();
     private DictionaryAutoBackupSettingsCompat() {}
@@ -30,6 +36,13 @@ public final class DictionaryAutoBackupSettingsCompat {
         }
     }
     public static boolean handleActivityResult(PreferenceFragment f, int r, int c, Intent d) { return false; }
+    public static boolean handleRequestPermissionsResult(PreferenceFragment f, int requestCode,
+            String[] permissions, int[] results) {
+        if (requestCode != REQUEST_STORAGE) return false;
+        Controller c; synchronized (CONTROLLERS) { c = CONTROLLERS.get(f); }
+        if (c != null) c.onStoragePermissionResult(results);
+        return true;
+    }
     public static void refresh(PreferenceFragment f) {
         Controller c; synchronized (CONTROLLERS) { c = CONTROLLERS.get(f); }
         if (c != null) c.refresh();
@@ -69,8 +82,7 @@ public final class DictionaryAutoBackupSettingsCompat {
         @Override public boolean onPreferenceClick(Preference p) {
             Context c = context(); if (c == null) return true;
             if (p == now) DictionaryAutoBackupCompat.request(c, true);
-            else if (p == importBackup) fragment.startActivity(
-                    new Intent(fragment.getActivity(), LocalBackupImportActivity.class));
+            else if (p == importBackup) openImportList(false);
             return true;
         }
         @Override public boolean onPreferenceChange(Preference p, Object value) {
@@ -91,6 +103,48 @@ public final class DictionaryAutoBackupSettingsCompat {
                 refreshSoon(); return true;
             }
             return false;
+        }
+        void openImportList(boolean permissionRetried) {
+            final Context c = context(); if (c == null || fragment == null) return;
+            final List<DictionaryAutoBackupCompat.BackupEntry> entries =
+                    DictionaryAutoBackupCompat.listBackups(c);
+            if (entries.isEmpty() && !permissionRetried && Build.VERSION.SDK_INT >= 23
+                    && fragment.getActivity().checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                fragment.requestPermissions(new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE },
+                        REQUEST_STORAGE);
+                return;
+            }
+            if (entries.isEmpty()) {
+                new AlertDialog.Builder(fragment.getActivity()).setTitle("没有可访问的本地备份")
+                        .setMessage("Documents/GooglePinyinBackup 中没有可列出的备份。卸载重装后也可以在 File Geek 中打开或分享 .txt 到 Google 拼音。")
+                        .setPositiveButton(android.R.string.ok, null).show();
+                return;
+            }
+            String[] names = new String[entries.size()];
+            for (int i = 0; i < names.length; i++) names[i] = entries.get(i).name;
+            new AlertDialog.Builder(fragment.getActivity()).setTitle("导入本地备份")
+                    .setItems(names, new DialogInterface.OnClickListener() {
+                        @Override public void onClick(DialogInterface dialog, int which) {
+                            confirmImport(entries.get(which));
+                        }
+                    }).setNegativeButton(android.R.string.cancel, null).show();
+        }
+        void confirmImport(final DictionaryAutoBackupCompat.BackupEntry entry) {
+            if (fragment == null || fragment.getActivity() == null) return;
+            new AlertDialog.Builder(fragment.getActivity()).setTitle("导入用户词典备份")
+                    .setMessage("将“" + entry.name + "”合并到当前用户词典？")
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override public void onClick(DialogInterface dialog, int which) {
+                            LocalBackupImportActivity.startNativeImport(fragment.getActivity(), entry.uri);
+                        }
+                    }).setNegativeButton(android.R.string.cancel, null).show();
+        }
+        void onStoragePermissionResult(int[] results) {
+            if (results != null && results.length > 0
+                    && results[0] == PackageManager.PERMISSION_GRANTED) openImportList(true);
+            else { Context c = context(); if (c != null) Toast.makeText(c,
+                    "需要文件权限读取卸载前保留的本地备份", Toast.LENGTH_LONG).show(); }
         }
         void refresh() {
             Context c = context(); if (c == null) return;

@@ -65,7 +65,9 @@ public final class LocalBackupImportActivity extends Activity {
         new AlertDialog.Builder(this).setTitle("导入用户词典备份")
                 .setMessage("将“" + name + "”合并到当前用户词典？")
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override public void onClick(DialogInterface d, int w) { startImport(uri); }
+                    @Override public void onClick(DialogInterface d, int w) {
+                        startNativeImport(LocalBackupImportActivity.this, uri); finish();
+                    }
                 }).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface d, int w) { finish(); }
                 }).setOnCancelListener(new DialogInterface.OnCancelListener() {
@@ -73,8 +75,8 @@ public final class LocalBackupImportActivity extends Activity {
                 }).show();
     }
 
-    private void startImport(Uri uri) {
-        final Context app = getApplicationContext();
+    static boolean startNativeImport(Context source, Uri uri) {
+        final Context app = source.getApplicationContext();
         try {
             Class<?> managerClass = Class.forName("aib");
             Object manager = managerClass.getMethod("a").invoke(null);
@@ -86,10 +88,11 @@ public final class LocalBackupImportActivity extends Activity {
             Method schedule = managerClass.getMethod("a", String.class, factoryType, Long.TYPE);
             schedule.invoke(manager, "user_dict_import", factory, 0L);
             Toast.makeText(app, "正在导入本地用户词典备份", Toast.LENGTH_SHORT).show();
+            return true;
         } catch (Throwable t) {
             Toast.makeText(app, "无法启动原生用户词典导入", Toast.LENGTH_LONG).show();
+            return false;
         }
-        finish();
     }
 
     private static final class ImportListener implements TaskListener {

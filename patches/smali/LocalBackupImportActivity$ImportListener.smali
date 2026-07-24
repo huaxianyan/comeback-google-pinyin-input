@@ -25,7 +25,7 @@
 .method constructor <init>(Landroid/content/Context;)V
     .registers 2
 
-    .line 97
+    .line 100
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
     iput-object p1, p0, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity$ImportListener;->context:Landroid/content/Context;
@@ -38,14 +38,14 @@
 .method public onTaskError(I)V
     .registers 2
 
-    .line 100
+    .line 103
     return-void
 .end method
 
 .method public onTaskFinished(ZLjava/lang/Object;)V
     .registers 4
 
-    .line 102
+    .line 105
     iget-object p2, p0, Lcom/google/android/inputmethod/pinyin/LocalBackupImportActivity$ImportListener;->context:Landroid/content/Context;
 
     if-eqz p1, :cond_7
@@ -64,23 +64,23 @@
 
     move-result-object p1
 
-    .line 103
+    .line 106
     invoke-virtual {p1}, Landroid/widget/Toast;->show()V
 
-    .line 104
+    .line 107
     return-void
 .end method
 
 .method public onTaskProgress(I)V
     .registers 2
 
-    .line 99
+    .line 102
     return-void
 .end method
 
 .method public onTaskStart()V
     .registers 1
 
-    .line 98
+    .line 101
     return-void
 .end method

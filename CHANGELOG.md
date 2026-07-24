@@ -1,5 +1,102 @@
 # Changelog
 
+## [1.0.0] - 2026-07-25
+
+首个正式 Android 16/17 兼容版。应用版本名恢复为简洁的 `4.5.2`，versionCode 为 `4520360`。
+
+### Changed
+
+- 将已验证的固定路径用户词典自动备份、整合式备份列表和卸载重装权限恢复合并到正式兼容包。
+- 使用新的“导入本地备份”和“立即备份”替换旧 DocumentsUI 导入/导出设置项，避免功能重复和不可用的空文件选择器。
+- 正式包名为 `com.google.android.inputmethod.pinyin.compat`。
+- README 更新为完整的版本、来源、签名、功能、构建和版权说明。
+- 将经 SHA-256 与 Google 原始证书信息标识的 4.5.2 arm64-v8a 原始 APK 收录至 `original/`，用于保存和可复现构建。
+
+## [0.40.0] - 2026-07-24
+
+对应 Compatibility v46 / versionCode `4520359`，把固定目录备份列表整合回字典设置页，并补齐卸载重装后的文件权限请求。
+
+### Fixed
+
+- “导入本地备份”不再启动单独页面，改为在当前字典设置页显示与频率/版本数选择一致的单选列表对话框；选择版本后再就地确认导入。
+- 当前安装无法列出旧 MediaStore 文件且尚未授权时，由新入口直接申请旧框架相同的 `WRITE_EXTERNAL_STORAGE` 文件权限；授权成功后自动重新加载备份列表，不再要求先点击旧导入入口。
+- 保留导出文件从 File Geek 通过 `ACTION_VIEW` / `ACTION_SEND` 打开到 Google 拼音的外部恢复入口。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat46-integrated-backup-import`。
+- 独立测试包名：`com.google.android.inputmethod.pinyin.localbackupaudit`。
+
+## [0.39.0] - 2026-07-24
+
+对应 Compatibility v45 / versionCode `4520358`，移除不可用的 DocumentsUI 目录选择依赖，改为固定 Documents 本地备份和显式手动导入。
+
+### Changed
+
+- 备份固定写入 `内部存储/Documents/GooglePinyinBackup`；“备份位置”改为只读显示，不再启动系统目录选择器。
+- API 29+ 通过 `MediaStore.Files`、`RELATIVE_PATH` 和 `IS_PENDING` 创建并发布原生 UTF-16LE TSV；清除数据或卸载后公共文件保留。
+- 新增“导入本地备份”，列出当前安装可访问的固定目录备份并复用原生 `UserDictImportTask`。
+- 新增显式 `ACTION_VIEW` / `ACTION_SEND text/plain` 导入 Activity；卸载重装后可在 File Geek 中打开或分享旧备份到 Google 拼音，由用户确认后导入。
+- 测试阶段保留旧“导入用户字典/导出用户字典”；验证完成后再以固定路径入口替换重复旧入口。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat45-fixed-documents-backup`。
+- 独立测试包名：`com.google.android.inputmethod.pinyin.localbackupaudit`。
+
+## [0.38.0] - 2026-07-24
+
+对应 Compatibility v44 / versionCode `4520357`，修复 V43 本地目录选择器无法从左侧位置列表进入内部存储的问题。
+
+### Fixed
+
+- 移除 tree picker 上的 `Intent.EXTRA_LOCAL_ONLY` 提示；Android 16 DocumentsUI 在目录模式下可能因此隐藏或禁用 primary storage 入口。
+- 纯本地限制仍由返回 URI 的 `com.android.externalstorage.documents` authority 强制执行，云端 provider 即使显示也无法通过验证。
+- API 26+ 使用 `DocumentsContract.EXTRA_INITIAL_URI` 默认打开 `primary:Documents`，让用户能直接选择预先建立的 `Documents/GooglePinyinBackupAudit`，体验更接近现有“导入用户字典”的文件选择器。
+- 继续使用 `ACTION_OPEN_DOCUMENT_TREE`，因为现有导入的 `GET_CONTENT` 只能授权单个文件，无法给自动备份授予创建和轮换多个文件所需的目录写权限。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat44-local-backup-picker-fix`。
+- 独立测试包名仍为 `com.google.android.inputmethod.pinyin.localbackupaudit`，可覆盖安装 V42/V43。
+
+## [0.37.0] - 2026-07-24
+
+对应 Compatibility v43 / versionCode `4520356`，修复 V42 打开字典设置时的立即崩溃。
+
+### Fixed
+
+- 旧 `CommonPreferenceFragment` 会在 API 20+ 把 XML 中的 `CheckBoxPreference` 运行时替换为 `SwitchPreference`；V42 helper 错误地强制转换回 `CheckBoxPreference`，触发 `ClassCastException`。
+- 自动备份开关改为通过两者共同的 `TwoStatePreference` 基类绑定，不改变旧框架的 Switch 转换和样式。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat43-local-backup-settings-fix`。
+- 独立测试包名仍为 `com.google.android.inputmethod.pinyin.localbackupaudit`，可覆盖安装 V42 测试包。
+
+## [0.36.0] - 2026-07-24
+
+对应 Compatibility v42 / versionCode `4520355`，使用独立 localbackupaudit 包验证清除数据或卸载后仍保留的设备本地用户词典导出备份。
+
+### Added
+
+- 在“设置 → 字典 → 用户字典”加入本地自动备份开关、本地目录、频率、保留版本和“立即备份”。
+- 仅接受 Pixel/AOSP 的本地 ExternalStorageProvider，通过 SAF 持久目录授权写入；不接受云端 DocumentsProvider，不上传或同步词条。
+- 完整复用原生中文/英文 `UserDictExportTask` 和 UTF-16LE TSV 格式，先写 `.partial`，校验 BOM/header 后 rename 为正式 `.txt`。
+- 自动配置保存在未注册到旧 `BackupAgent` 的独立 SharedPreferences；清除数据或卸载后配置消失，但公共本地备份文件保留，新装后由用户使用现有“导入用户字典”手动导入。
+- 支持 1/3/7/14/30 天最小间隔、3/5/10/20/30 份轮换以及失败退避；不新增 Alarm、Job、Worker、自动恢复或启动扫描。
+
+### Changed
+
+- 原生用户词典 exporter 与 V41 保存路径共享进程级 dictionary-I/O lock，避免生命周期同步保存与后台导出并发访问 mutable dictionary。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat42-local-dictionary-backup`。
+- 独立测试包名：`com.google.android.inputmethod.pinyin.localbackupaudit`。
+- 测试 APK 已通过 apktool 重建、zipalign 以及 v1/v2/v3 签名校验；构建时设备未连接，因此尚未安装或执行功能测试。
+- 研究与设计：`docs/dictionary-auto-backup-design.md`。
+
 ## [0.35.0] - 2026-07-24
 
 对应 Compatibility v41 / versionCode `4520354`，在独立 dictionaryaudit 包中复核可变词库的滚动保存与故障恢复。

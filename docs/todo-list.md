@@ -40,6 +40,8 @@
 - [x] 对照当前 Gboard 复核 `DictionaryAccessor`、启动 enrollment、保存调度及 `_bak`/`_tmp` 轮换
 - [x] 确认 V20 在备份加载失败后遗漏有效 `_tmp`、强制保存可与异步保存重叠、显式清除可能遗留旧备份
 - [x] V41 增加 backup → tmp 的有界加载回退，串行化保存，并在明确删除/清空后清除恢复旁路文件
+- [x] 完成用户词典本地自动备份和手动恢复：复用原生 exporter/importer，固定写入 `Documents/GooglePinyinBackup`，通过 MediaStore `IS_PENDING` 校验后发布并轮换版本（见 `docs/dictionary-auto-backup-design.md`）
+- [ ] 分阶段实现本地自动备份：先验证“本地目录 → 立即备份 → 清除数据/卸载后文件仍在 → 新装手动导入”，再接入时间间隔和保留版本
 - [ ] 使用独立 dictionaryaudit 包验证中断轮换、损坏备份、有效临时文件及显式清空场景
 
 ## 当前任务：既有功能基础复核

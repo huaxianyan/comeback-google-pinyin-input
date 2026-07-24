@@ -46,8 +46,8 @@ def apply(decoded: Path, application_id: str) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520354\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat41-dictionary-recovery",
+        "versionInfo:\n  versionCode: 4520360\n"
+        "  versionName: 4.5.2",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -629,8 +629,9 @@ def apply(decoded: Path, application_id: str) -> None:
         'android:showAsAction="never" />\n',
         "",
     )
+    dictionary_settings_xml = decoded / "res/xml/setting_dictionary.xml"
     replace_once(
-        decoded / "res/xml/setting_dictionary.xml",
+        dictionary_settings_xml,
         '    <PreferenceCategory android:title="@string/setting_update_category_title">\n'
         '        <com.google.android.apps.inputmethod.libs.framework.preference.widget.'
         'AutoSyncedCheckBoxPreference android:persistent="true" '
@@ -642,6 +643,42 @@ def apply(decoded: Path, application_id: str) -> None:
         'android:dependency="@string/pref_key_enable_dictionary_update" />\n'
         '    </PreferenceCategory>\n',
         "",
+    )
+
+    # Fixed-path rotating exports survive clear-data/uninstall. The validated
+    # local backup actions replace the obsolete picker-based import/export rows;
+    # their state lives outside the preferences registered with BackupAgent.
+    replace_once(
+        dictionary_settings_xml,
+        '        <Preference android:persistent="false" '
+        'android:title="@string/setting_import_user_dictionary_title" '
+        'android:key="@string/setting_import_user_dictionary_key" />\n'
+        '        <Preference android:persistent="false" '
+        'android:title="@string/setting_export_user_dictionary_title" '
+        'android:key="@string/setting_export_user_dictionary_key" />',
+        '        <CheckBoxPreference android:persistent="false" '
+        'android:title="@string/dictionary_auto_backup_title" '
+        'android:key="dictionary_auto_backup_enabled" '
+        'android:summary="@string/dictionary_auto_backup_privacy_summary" />\n'
+        '        <Preference android:persistent="false" '
+        'android:title="@string/dictionary_auto_backup_location_title" '
+        'android:key="dictionary_auto_backup_location" />\n'
+        '        <ListPreference android:persistent="false" '
+        'android:title="@string/dictionary_auto_backup_interval_title" '
+        'android:key="dictionary_auto_backup_interval_days" '
+        'android:entries="@array/dictionary_auto_backup_interval_entries" '
+        'android:entryValues="@array/dictionary_auto_backup_interval_values" />\n'
+        '        <ListPreference android:persistent="false" '
+        'android:title="@string/dictionary_auto_backup_retention_title" '
+        'android:key="dictionary_auto_backup_retention_count" '
+        'android:entries="@array/dictionary_auto_backup_retention_entries" '
+        'android:entryValues="@array/dictionary_auto_backup_retention_values" />\n'
+        '        <Preference android:persistent="false" '
+        'android:title="@string/dictionary_auto_backup_now_title" '
+        'android:key="dictionary_auto_backup_now" />\n'
+        '        <Preference android:persistent="false" '
+        'android:title="@string/dictionary_auto_backup_import_title" '
+        'android:key="dictionary_auto_backup_import" />',
     )
 
     # PinyinApp's Laym instance registers Clearcut/Primes processors, daily
@@ -724,6 +761,49 @@ def apply(decoded: Path, application_id: str) -> None:
         "    :cond_0",
         "    .line 13\n"
         "    :cond_0",
+    )
+
+    # Queue a due local export after Pinyin has submitted/completed both Chinese
+    # and English save paths. The helper is a no-op unless explicitly enabled.
+    replace_once(
+        pinyin_ime,
+        "    .line 22\n"
+        "    invoke-static {p0}, Lagb;->a(Landroid/content/Context;)Lagb;\n\n"
+        "    move-result-object v0\n\n"
+        "    invoke-static {p0, v0}, Lcom/google/android/apps/inputmethod/libs/hmm/"
+        "SaveDictionaryTask;->saveDictionaryNow(Landroid/content/Context;"
+        "Lcom/google/android/apps/inputmethod/libs/hmm/AbstractHmmEngineFactory;)V\n\n"
+        "    .line 23",
+        "    .line 22\n"
+        "    invoke-static {p0}, Lagb;->a(Landroid/content/Context;)Lagb;\n\n"
+        "    move-result-object v0\n\n"
+        "    invoke-static {p0, v0}, Lcom/google/android/apps/inputmethod/libs/hmm/"
+        "SaveDictionaryTask;->saveDictionaryNow(Landroid/content/Context;"
+        "Lcom/google/android/apps/inputmethod/libs/hmm/AbstractHmmEngineFactory;)V\n\n"
+        "    const/4 v0, 0x0\n\n"
+        "    invoke-static {p0, v0}, Lcom/google/android/inputmethod/pinyin/"
+        "DictionaryAutoBackupCompat;->request(Landroid/content/Context;Z)V\n\n"
+        "    .line 23",
+    )
+    replace_once(
+        pinyin_ime,
+        "    .line 32\n"
+        "    invoke-static {p0}, Lagb;->a(Landroid/content/Context;)Lagb;\n\n"
+        "    move-result-object v0\n\n"
+        "    invoke-static {p0, v0}, Lcom/google/android/apps/inputmethod/libs/hmm/"
+        "SaveDictionaryTask;->launchTaskIfNeeded(Landroid/content/Context;"
+        "Lcom/google/android/apps/inputmethod/libs/hmm/AbstractHmmEngineFactory;)V\n\n"
+        "    .line 33",
+        "    .line 32\n"
+        "    invoke-static {p0}, Lagb;->a(Landroid/content/Context;)Lagb;\n\n"
+        "    move-result-object v0\n\n"
+        "    invoke-static {p0, v0}, Lcom/google/android/apps/inputmethod/libs/hmm/"
+        "SaveDictionaryTask;->launchTaskIfNeeded(Landroid/content/Context;"
+        "Lcom/google/android/apps/inputmethod/libs/hmm/AbstractHmmEngineFactory;)V\n\n"
+        "    const/4 v0, 0x0\n\n"
+        "    invoke-static {p0, v0}, Lcom/google/android/inputmethod/pinyin/"
+        "DictionaryAutoBackupCompat;->request(Landroid/content/Context;Z)V\n\n"
+        "    .line 33",
     )
 
     # Remove the dictionary-update permission feature registration.
@@ -882,7 +962,7 @@ def apply(decoded: Path, application_id: str) -> None:
         "        }\n"
         "    .end annotation\n"
         ".end field\n\n"
-        ".field private static final sSaveLock:Ljava/lang/Object;",
+        ".field public static final sSaveLock:Ljava/lang/Object;",
     )
     replace_once(
         save_dictionary_task,
@@ -924,6 +1004,73 @@ def apply(decoded: Path, application_id: str) -> None:
         "    move-exception v0\n\n"
         "    monitor-exit v4\n\n"
         "    throw v0\n"
+        ".end method",
+    )
+
+    # A lifecycle-forced save runs synchronously and can otherwise overlap a
+    # background manual/automatic exporter. Keep native accessor enumeration
+    # under the same process-wide lock as dictionary rotation.
+    export_task = decoded / (
+        "smali/com/google/android/apps/inputmethod/libs/hmm/userdictionary/"
+        "UserDictExportTask.smali"
+    )
+    replace_once(
+        export_task,
+        ".method protected varargs doInBackground([Ljava/lang/Void;)Ljava/lang/Boolean;\n"
+        "    .locals 2\n\n"
+        "    .prologue\n"
+        "    .line 7\n"
+        "    invoke-direct {p0}, Lcom/google/android/apps/inputmethod/libs/hmm/"
+        "userdictionary/UserDictExportTask;->openDictionaries()"
+        "[Lcom/google/android/apps/inputmethod/libs/hmm/DictionaryAccessor;\n\n"
+        "    move-result-object v0\n\n"
+        "    .line 8\n"
+        "    invoke-direct {p0, v0}, Lcom/google/android/apps/inputmethod/libs/hmm/"
+        "userdictionary/UserDictExportTask;->exportUserDictionary("
+        "[Lcom/google/android/apps/inputmethod/libs/hmm/DictionaryAccessor;)Z\n\n"
+        "    move-result v1\n\n"
+        "    .line 9\n"
+        "    invoke-direct {p0, v0}, Lcom/google/android/apps/inputmethod/libs/hmm/"
+        "userdictionary/UserDictExportTask;->closeDictionaries("
+        "[Lcom/google/android/apps/inputmethod/libs/hmm/DictionaryAccessor;)V\n\n"
+        "    .line 10\n"
+        "    invoke-static {v1}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;\n\n"
+        "    move-result-object v0\n\n"
+        "    return-object v0\n"
+        ".end method",
+        ".method protected varargs doInBackground([Ljava/lang/Void;)Ljava/lang/Boolean;\n"
+        "    .locals 4\n\n"
+        "    .prologue\n"
+        "    sget-object v2, Lcom/google/android/apps/inputmethod/libs/hmm/"
+        "SaveDictionaryTask;->sSaveLock:Ljava/lang/Object;\n\n"
+        "    monitor-enter v2\n\n"
+        "    :try_start_export_lock\n"
+        "    .line 7\n"
+        "    invoke-direct {p0}, Lcom/google/android/apps/inputmethod/libs/hmm/"
+        "userdictionary/UserDictExportTask;->openDictionaries()"
+        "[Lcom/google/android/apps/inputmethod/libs/hmm/DictionaryAccessor;\n\n"
+        "    move-result-object v0\n\n"
+        "    .line 8\n"
+        "    invoke-direct {p0, v0}, Lcom/google/android/apps/inputmethod/libs/hmm/"
+        "userdictionary/UserDictExportTask;->exportUserDictionary("
+        "[Lcom/google/android/apps/inputmethod/libs/hmm/DictionaryAccessor;)Z\n\n"
+        "    move-result v1\n\n"
+        "    .line 9\n"
+        "    invoke-direct {p0, v0}, Lcom/google/android/apps/inputmethod/libs/hmm/"
+        "userdictionary/UserDictExportTask;->closeDictionaries("
+        "[Lcom/google/android/apps/inputmethod/libs/hmm/DictionaryAccessor;)V\n\n"
+        "    .line 10\n"
+        "    invoke-static {v1}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;\n\n"
+        "    move-result-object v0\n"
+        "    :try_end_export_lock\n"
+        "    .catchall {:try_start_export_lock .. :try_end_export_lock} "
+        ":catchall_export_lock\n\n"
+        "    monitor-exit v2\n\n"
+        "    return-object v0\n\n"
+        "    :catchall_export_lock\n"
+        "    move-exception v3\n\n"
+        "    monitor-exit v2\n\n"
+        "    throw v3\n"
         ".end method",
     )
 
@@ -1031,6 +1178,26 @@ def apply(decoded: Path, application_id: str) -> None:
         'android:name="com.google.android.apps.inputmethod.libs.framework.core.LauncherActivity" '
         'android:theme="@style/SettingsTheme.Transparent">',
     )
+    replace_once(
+        manifest,
+        '    </application>\n</manifest>',
+        '        <activity android:exported="true" '
+        'android:label="@string/dictionary_auto_backup_import_title" '
+        'android:name="com.google.android.inputmethod.pinyin.LocalBackupImportActivity">\n'
+        '            <intent-filter>\n'
+        '                <action android:name="android.intent.action.VIEW"/>\n'
+        '                <category android:name="android.intent.category.DEFAULT"/>\n'
+        '                <data android:mimeType="text/plain"/>\n'
+        '            </intent-filter>\n'
+        '            <intent-filter>\n'
+        '                <action android:name="android.intent.action.SEND"/>\n'
+        '                <category android:name="android.intent.category.DEFAULT"/>\n'
+        '                <data android:mimeType="text/plain"/>\n'
+        '            </intent-filter>\n'
+        '        </activity>\n'
+        '    </application>\n</manifest>',
+    )
+
     replace_once(
         manifest,
         '<receiver android:name="com.google.android.apps.inputmethod.libs.framework.core.'
@@ -1234,6 +1401,27 @@ def apply(decoded: Path, application_id: str) -> None:
         helper_dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(helper_src, helper_dst)
 
+    auto_backup_helpers = sorted(
+        list((ROOT / "patches/smali").glob("DictionaryAutoBackup*.smali"))
+        + list((ROOT / "patches/smali").glob("LocalBackupImportActivity*.smali"))
+    )
+    if not auto_backup_helpers:
+        raise RuntimeError("Missing generated dictionary auto-backup helpers")
+    for helper_src in auto_backup_helpers:
+        helper_dst = decoded / "smali/com/google/android/inputmethod/pinyin" / helper_src.name
+        if helper_dst.exists():
+            raise RuntimeError(f"Refusing to overwrite existing helper: {helper_dst}")
+        shutil.copyfile(helper_src, helper_dst)
+
+    dictionary_fragment_src = ROOT / "patches/smali/DictionarySettingsFragment.smali"
+    dictionary_fragment_dst = decoded / (
+        "smali/com/google/android/apps/inputmethod/pinyin/preference/"
+        "DictionarySettingsFragment.smali"
+    )
+    if not dictionary_fragment_dst.exists():
+        raise RuntimeError(f"Missing dictionary settings fragment: {dictionary_fragment_dst}")
+    shutil.copyfile(dictionary_fragment_src, dictionary_fragment_dst)
+
     first_run_helpers = (
         (
             "FirstRunNavigationCompat.smali",
@@ -1263,7 +1451,7 @@ def apply(decoded: Path, application_id: str) -> None:
         raise RuntimeError(f"Refusing to overwrite existing helper: {candidate_dst}")
     shutil.copyfile(candidate_src, candidate_dst)
 
-    print(f"Applied compatibility v41 dictionary recovery patches to {decoded} ({application_id})")
+    print(f"Applied Google Pinyin compatibility 4.5.2 to {decoded} ({application_id})")
 
 
 def main() -> None:

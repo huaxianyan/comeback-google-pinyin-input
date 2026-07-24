@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dictionary_auto_backup_title">自动备份用户字典</string>
+    <string name="dictionary_auto_backup_location_title">备份位置（仅本地）</string>
+    <string name="dictionary_auto_backup_interval_title">备份频率</string>
+    <string name="dictionary_auto_backup_retention_title">保留备份版本</string>
+    <string name="dictionary_auto_backup_now_title">立即备份</string>
+    <string name="dictionary_auto_backup_import_title">导入本地备份</string>
+    <string name="dictionary_auto_backup_privacy_summary">备份固定保存在 Documents/GooglePinyinBackup；清除应用数据或卸载后文件仍保留。</string>
+
+    <string-array name="dictionary_auto_backup_interval_entries">
+        <item>每天</item>
+        <item>每 3 天</item>
+        <item>每 7 天</item>
+        <item>每 14 天</item>
+        <item>每 30 天</item>
+    </string-array>
+    <string-array name="dictionary_auto_backup_interval_values">
+        <item>1</item>
+        <item>3</item>
+        <item>7</item>
+        <item>14</item>
+        <item>30</item>
+    </string-array>
+
+    <string-array name="dictionary_auto_backup_retention_entries">
+        <item>3 份</item>
+        <item>5 份</item>
+        <item>10 份</item>
+        <item>20 份</item>
+        <item>30 份</item>
+    </string-array>
+    <string-array name="dictionary_auto_backup_retention_values">
+        <item>3</item>
+        <item>5</item>
+        <item>10</item>
+        <item>20</item>
+        <item>30</item>
+    </string-array>
+</resources>

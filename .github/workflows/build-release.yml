@@ -7,6 +7,15 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
+    inputs:
+      application_id:
+        description: Application ID override for isolated audit builds
+        required: false
+        type: string
+      artifact_name:
+        description: Optional Actions artifact label
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -34,7 +43,8 @@ jobs:
       KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
       KEY_ALIAS: ${{ vars.ANDROID_SIGNING_KEY_ALIAS }}
       EXPECTED_CERT_SHA256: ${{ vars.ANDROID_SIGNING_CERT_SHA256 }}
-      APPLICATION_ID: ${{ vars.ANDROID_APPLICATION_ID }}
+      APPLICATION_ID: ${{ inputs.application_id || vars.ANDROID_APPLICATION_ID }}
+      ARTIFACT_LABEL: ${{ inputs.artifact_name || github.sha }}
 
     steps:
       - name: Check out source
@@ -152,7 +162,7 @@ jobs:
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: google-pinyin-${{ github.sha }}
+          name: google-pinyin-${{ env.ARTIFACT_LABEL }}
           path: |
             dist/${{ env.RELEASE_APK_NAME }}
             dist/${{ env.RELEASE_APK_NAME }}.sha256

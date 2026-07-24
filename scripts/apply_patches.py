@@ -46,7 +46,7 @@ def apply(decoded: Path, application_id: str) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520360\n"
+        "versionInfo:\n  versionCode: 4520361\n"
         "  versionName: 4.5.2",
     )
 
@@ -256,6 +256,30 @@ def apply(decoded: Path, application_id: str) -> None:
     return v0
 .end method"""
     replace_once(first_run_activity, old_page_selector, new_page_selector)
+
+    # A completion marker in a separate, non-backed-up preferences file closes
+    # the race between removing the guide task and IME service startup. Keep the
+    # historical HAD_FIRST_RUN check as migration fallback for existing users.
+    replace_once(
+        first_run_activity,
+        ".method public static b(Landroid/content/Context;)Z\n"
+        "    .locals 1\n\n"
+        "    .prologue\n"
+        "    .line 2\n"
+        "    sget-boolean v0, Laik;->h:Z",
+        ".method public static b(Landroid/content/Context;)Z\n"
+        "    .locals 1\n\n"
+        "    invoke-static {p0}, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
+        "FirstRunStateCompat;->isComplete(Landroid/content/Context;)Z\n\n"
+        "    move-result v0\n\n"
+        "    if-eqz v0, :check_legacy_first_run\n\n"
+        "    const/4 v0, 0x0\n\n"
+        "    return v0\n\n"
+        "    :check_legacy_first_run\n"
+        "    .prologue\n"
+        "    .line 2\n"
+        "    sget-boolean v0, Laik;->h:Z",
+    )
     replace_once(
         first_run_activity,
         "\n\n# virtual methods\n.method protected final a()I",
@@ -357,6 +381,8 @@ def apply(decoded: Path, application_id: str) -> None:
         "    if-ne v1, v2, :continue_next\n\n"
         "    check-cast v0, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
         "PinyinFirstRunActivity;\n\n"
+        "    invoke-static {v0}, Lcom/google/android/inputmethod/pinyin/firstrun/"
+        "FirstRunStateCompat;->complete(Landroid/content/Context;)V\n\n"
         "    invoke-virtual {v0}, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
         "PinyinFirstRunActivity;->exitGuide()V\n\n"
         "    return-void\n\n"
@@ -679,6 +705,24 @@ def apply(decoded: Path, application_id: str) -> None:
         '        <Preference android:persistent="false" '
         'android:title="@string/dictionary_auto_backup_import_title" '
         'android:key="dictionary_auto_backup_import" />',
+    )
+
+    # Restored setup flags are installation-local. Keeping HAD_FIRST_RUN or
+    # USER_SELECTED_KEYBOARD from an uninstalled copy can skip or replay parts
+    # of setup and bypass the original four-layout dashboard.
+    backup_agent = decoded / (
+        "smali/com/google/android/apps/inputmethod/libs/framework/core/BackupAgent.smali"
+    )
+    replace_once(
+        backup_agent,
+        "    invoke-super {p0, p1, p2, p3}, Landroid/app/backup/BackupAgentHelper;"
+        "->onRestore(Landroid/app/backup/BackupDataInput;ILandroid/os/ParcelFileDescriptor;)V\n\n"
+        "    .line 8",
+        "    invoke-super {p0, p1, p2, p3}, Landroid/app/backup/BackupAgentHelper;"
+        "->onRestore(Landroid/app/backup/BackupDataInput;ILandroid/os/ParcelFileDescriptor;)V\n\n"
+        "    invoke-static {p0}, Lcom/google/android/inputmethod/pinyin/firstrun/"
+        "FirstRunStateCompat;->clearRestoredSetupState(Landroid/content/Context;)V\n\n"
+        "    .line 8",
     )
 
     # PinyinApp's Laym instance registers Clearcut/Primes processors, daily
@@ -1216,6 +1260,28 @@ def apply(decoded: Path, application_id: str) -> None:
         "    .line 75\n"
         "    invoke-super {p0, p1, p2}, Labp;->onStartInputView("
         "Landroid/view/inputmethod/EditorInfo;Z)V\n\n"
+        "    # After setup, show the original four-layout dashboard at the first\n"
+        "    # eligible text field even if the IME service initialized on step 2.\n"
+        "    invoke-static {p0}, Lcom/google/android/inputmethod/pinyin/firstrun/"
+        "FirstRunStateCompat;->shouldForceDashboard(Landroid/content/Context;)Z\n\n"
+        "    move-result v0\n\n"
+        "    if-eqz v0, :first_run_dashboard_done\n\n"
+        "    iget-object v0, p0, Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "GoogleInputMethodService;->a:Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "InputBundleManager;\n\n"
+        "    invoke-virtual {v0}, Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "InputBundleManager;->a()I\n\n"
+        "    move-result v1\n\n"
+        "    invoke-virtual {p0, v1}, Lcom/google/android/inputmethod/pinyin/PinyinIME;"
+        "->shouldSwitchToDashboard(I)Z\n\n"
+        "    move-result v1\n\n"
+        "    if-eqz v1, :first_run_dashboard_done\n\n"
+        "    const-string v1, \"dashboard\"\n\n"
+        "    invoke-virtual {v0, v1}, Lcom/google/android/apps/inputmethod/libs/framework/core/"
+        "InputBundleManager;->b(Ljava/lang/String;)V\n\n"
+        "    invoke-static {p0}, Lcom/google/android/inputmethod/pinyin/firstrun/"
+        "FirstRunStateCompat;->markDashboardHandled(Landroid/content/Context;)V\n\n"
+        "    :first_run_dashboard_done\n"
         "    # Android 16: match the navigation area to the keyboard theme.\n"
         "    invoke-static {p0}, Lcom/google/android/inputmethod/pinyin/NavigationBarCompat;"
         "->apply(Lcom/google/android/apps/inputmethod/libs/framework/core/"
@@ -1432,6 +1498,11 @@ def apply(decoded: Path, application_id: str) -> None:
             "NonSwipeableFirstRunViewPager.smali",
             "smali/com/google/android/apps/inputmethod/libs/framework/firstrun/"
             "NonSwipeableFirstRunViewPager.smali",
+        ),
+        (
+            "FirstRunStateCompat.smali",
+            "smali/com/google/android/inputmethod/pinyin/firstrun/"
+            "FirstRunStateCompat.smali",
         ),
     )
     for helper_name, relative_destination in first_run_helpers:

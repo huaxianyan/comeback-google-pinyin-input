@@ -8,8 +8,8 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
-import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
+import android.preference.TwoStatePreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.provider.OpenableColumns;
@@ -76,7 +76,7 @@ public final class DictionaryAutoBackupSettingsCompat {
             Preference.OnPreferenceChangeListener,
             DictionaryAutoBackupCompat.ValidationCallback {
         private PreferenceFragment fragment;
-        private CheckBoxPreference enabledPreference;
+        private TwoStatePreference enabledPreference;
         private Preference locationPreference;
         private ListPreference intervalPreference;
         private ListPreference retentionPreference;
@@ -88,7 +88,9 @@ public final class DictionaryAutoBackupSettingsCompat {
         Controller(PreferenceFragment fragment) { this.fragment = fragment; }
 
         void bind() {
-            enabledPreference = (CheckBoxPreference) fragment.findPreference(
+            // CommonPreferenceFragment converts every CheckBoxPreference to a
+            // SwitchPreference on API 20+, so bind through their shared base.
+            enabledPreference = (TwoStatePreference) fragment.findPreference(
                     DictionaryAutoBackupCompat.KEY_ENABLED);
             locationPreference = fragment.findPreference(KEY_LOCATION);
             intervalPreference = (ListPreference) fragment.findPreference(

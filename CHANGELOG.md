@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.37.0] - 2026-07-24
+
+对应 Compatibility v43 / versionCode `4520356`，修复 V42 打开字典设置时的立即崩溃。
+
+### Fixed
+
+- 旧 `CommonPreferenceFragment` 会在 API 20+ 把 XML 中的 `CheckBoxPreference` 运行时替换为 `SwitchPreference`；V42 helper 错误地强制转换回 `CheckBoxPreference`，触发 `ClassCastException`。
+- 自动备份开关改为通过两者共同的 `TwoStatePreference` 基类绑定，不改变旧框架的 Switch 转换和样式。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat43-local-backup-settings-fix`。
+- 独立测试包名仍为 `com.google.android.inputmethod.pinyin.localbackupaudit`，可覆盖安装 V42 测试包。
+
 ## [0.36.0] - 2026-07-24
 
 对应 Compatibility v42 / versionCode `4520355`，使用独立 localbackupaudit 包验证清除数据或卸载后仍保留的设备本地用户词典导出备份。

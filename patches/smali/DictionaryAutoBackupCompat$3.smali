@@ -8,7 +8,7 @@
 
 # annotations
 .annotation system Ldalvik/annotation/EnclosingMethod;
-    value = Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->rotate(Landroid/content/Context;Landroid/net/Uri;I)Z
+    value = Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->rotate(Landroid/content/Context;I)Z
 .end annotation
 
 .annotation system Ldalvik/annotation/InnerClass;
@@ -20,7 +20,7 @@
     value = {
         "Ljava/lang/Object;",
         "Ljava/util/Comparator<",
-        "Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$DocumentInfo;",
+        "Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$BackupEntry;",
         ">;"
     }
 .end annotation
@@ -30,7 +30,7 @@
 .method constructor <init>()V
     .registers 1
 
-    .line 315
+    .line 223
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
     return-void
@@ -38,13 +38,13 @@
 
 
 # virtual methods
-.method public compare(Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$DocumentInfo;Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$DocumentInfo;)I
+.method public compare(Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$BackupEntry;Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$BackupEntry;)I
     .registers 3
 
-    .line 317
-    iget-object p2, p2, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$DocumentInfo;->name:Ljava/lang/String;
+    .line 224
+    iget-object p2, p2, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$BackupEntry;->name:Ljava/lang/String;
 
-    iget-object p1, p1, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$DocumentInfo;->name:Ljava/lang/String;
+    iget-object p1, p1, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$BackupEntry;->name:Ljava/lang/String;
 
     invoke-virtual {p2, p1}, Ljava/lang/String;->compareTo(Ljava/lang/String;)I
 
@@ -56,12 +56,12 @@
 .method public bridge synthetic compare(Ljava/lang/Object;Ljava/lang/Object;)I
     .registers 3
 
-    .line 315
-    check-cast p1, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$DocumentInfo;
+    .line 223
+    check-cast p1, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$BackupEntry;
 
-    check-cast p2, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$DocumentInfo;
+    check-cast p2, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$BackupEntry;
 
-    invoke-virtual {p0, p1, p2}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$3;->compare(Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$DocumentInfo;Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$DocumentInfo;)I
+    invoke-virtual {p0, p1, p2}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$3;->compare(Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$BackupEntry;Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$BackupEntry;)I
 
     move-result p1
 

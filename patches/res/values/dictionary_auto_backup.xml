@@ -5,7 +5,8 @@
     <string name="dictionary_auto_backup_interval_title">备份频率</string>
     <string name="dictionary_auto_backup_retention_title">保留备份版本</string>
     <string name="dictionary_auto_backup_now_title">立即备份</string>
-    <string name="dictionary_auto_backup_privacy_summary">备份保存在设备本地；清除应用数据或卸载后文件仍保留，重新安装后请使用“导入用户字典”手动导入。</string>
+    <string name="dictionary_auto_backup_import_title">导入本地备份</string>
+    <string name="dictionary_auto_backup_privacy_summary">备份固定保存在 Documents/GooglePinyinBackup；清除应用数据或卸载后文件仍保留。</string>
 
     <string-array name="dictionary_auto_backup_interval_entries">
         <item>每天</item>

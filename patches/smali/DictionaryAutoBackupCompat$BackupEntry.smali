@@ -1,4 +1,4 @@
-.class final Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$DocumentInfo;
+.class final Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$BackupEntry;
 .super Ljava/lang/Object;
 .source "DictionaryAutoBackupCompat.java"
 
@@ -9,8 +9,8 @@
 .end annotation
 
 .annotation system Ldalvik/annotation/InnerClass;
-    accessFlags = 0x1a
-    name = "DocumentInfo"
+    accessFlags = 0x18
+    name = "BackupEntry"
 .end annotation
 
 
@@ -24,12 +24,12 @@
 .method constructor <init>(Ljava/lang/String;Landroid/net/Uri;)V
     .registers 3
 
-    .line 338
+    .line 217
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
-    iput-object p1, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$DocumentInfo;->name:Ljava/lang/String;
+    iput-object p1, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$BackupEntry;->name:Ljava/lang/String;
 
-    iput-object p2, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$DocumentInfo;->uri:Landroid/net/Uri;
+    iput-object p2, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$BackupEntry;->uri:Landroid/net/Uri;
 
     return-void
 .end method

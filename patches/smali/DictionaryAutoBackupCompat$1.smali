@@ -22,19 +22,15 @@
 
 .field final synthetic val$force:Z
 
-.field final synthetic val$tree:Landroid/net/Uri;
-
 
 # direct methods
-.method constructor <init>(Landroid/content/Context;Landroid/net/Uri;Z)V
-    .registers 4
+.method constructor <init>(Landroid/content/Context;Z)V
+    .registers 3
 
-    .line 142
+    .line 98
     iput-object p1, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$1;->val$context:Landroid/content/Context;
 
-    iput-object p2, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$1;->val$tree:Landroid/net/Uri;
-
-    iput-boolean p3, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$1;->val$force:Z
+    iput-boolean p2, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$1;->val$force:Z
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
@@ -44,18 +40,15 @@
 
 # virtual methods
 .method public run()V
-    .registers 4
+    .registers 3
 
-    .line 144
+    .line 98
     iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$1;->val$context:Landroid/content/Context;
 
-    iget-object v1, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$1;->val$tree:Landroid/net/Uri;
+    iget-boolean v1, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$1;->val$force:Z
 
-    iget-boolean v2, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$1;->val$force:Z
+    # invokes: Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->createAndExport(Landroid/content/Context;Z)V
+    invoke-static {v0, v1}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->access$000(Landroid/content/Context;Z)V
 
-    # invokes: Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->prepareAndStart(Landroid/content/Context;Landroid/net/Uri;Z)V
-    invoke-static {v0, v1, v2}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->access$000(Landroid/content/Context;Landroid/net/Uri;Z)V
-
-    .line 145
     return-void
 .end method

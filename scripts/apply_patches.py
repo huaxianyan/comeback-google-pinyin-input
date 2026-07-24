@@ -46,8 +46,8 @@ def apply(decoded: Path, application_id: str) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520357\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat44-local-backup-picker-fix",
+        "versionInfo:\n  versionCode: 4520358\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat45-fixed-documents-backup",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -676,7 +676,10 @@ def apply(decoded: Path, application_id: str) -> None:
         'android:entryValues="@array/dictionary_auto_backup_retention_values" />\n'
         '        <Preference android:persistent="false" '
         'android:title="@string/dictionary_auto_backup_now_title" '
-        'android:key="dictionary_auto_backup_now" />',
+        'android:key="dictionary_auto_backup_now" />\n'
+        '        <Preference android:persistent="false" '
+        'android:title="@string/dictionary_auto_backup_import_title" '
+        'android:key="dictionary_auto_backup_import" />',
     )
 
     # PinyinApp's Laym instance registers Clearcut/Primes processors, daily
@@ -1178,6 +1181,26 @@ def apply(decoded: Path, application_id: str) -> None:
     )
     replace_once(
         manifest,
+        '    </application>\n</manifest>',
+        '        <activity android:exported="true" '
+        'android:label="@string/dictionary_auto_backup_import_title" '
+        'android:name="com.google.android.inputmethod.pinyin.LocalBackupImportActivity">\n'
+        '            <intent-filter>\n'
+        '                <action android:name="android.intent.action.VIEW"/>\n'
+        '                <category android:name="android.intent.category.DEFAULT"/>\n'
+        '                <data android:mimeType="text/plain"/>\n'
+        '            </intent-filter>\n'
+        '            <intent-filter>\n'
+        '                <action android:name="android.intent.action.SEND"/>\n'
+        '                <category android:name="android.intent.category.DEFAULT"/>\n'
+        '                <data android:mimeType="text/plain"/>\n'
+        '            </intent-filter>\n'
+        '        </activity>\n'
+        '    </application>\n</manifest>',
+    )
+
+    replace_once(
+        manifest,
         '<receiver android:name="com.google.android.apps.inputmethod.libs.framework.core.'
         'LauncherIconVisibilityInitializer">',
         '<receiver android:exported="false" '
@@ -1379,7 +1402,10 @@ def apply(decoded: Path, application_id: str) -> None:
         helper_dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(helper_src, helper_dst)
 
-    auto_backup_helpers = sorted((ROOT / "patches/smali").glob("DictionaryAutoBackup*.smali"))
+    auto_backup_helpers = sorted(
+        list((ROOT / "patches/smali").glob("DictionaryAutoBackup*.smali"))
+        + list((ROOT / "patches/smali").glob("LocalBackupImportActivity*.smali"))
+    )
     if not auto_backup_helpers:
         raise RuntimeError("Missing generated dictionary auto-backup helpers")
     for helper_src in auto_backup_helpers:
@@ -1426,7 +1452,7 @@ def apply(decoded: Path, application_id: str) -> None:
         raise RuntimeError(f"Refusing to overwrite existing helper: {candidate_dst}")
     shutil.copyfile(candidate_src, candidate_dst)
 
-    print(f"Applied compatibility v44 local backup picker fix to {decoded} ({application_id})")
+    print(f"Applied compatibility v45 fixed Documents backup to {decoded} ({application_id})")
 
 
 def main() -> None:

@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.39.0] - 2026-07-24
+
+对应 Compatibility v45 / versionCode `4520358`，移除不可用的 DocumentsUI 目录选择依赖，改为固定 Documents 本地备份和显式手动导入。
+
+### Changed
+
+- 备份固定写入 `内部存储/Documents/GooglePinyinBackup`；“备份位置”改为只读显示，不再启动系统目录选择器。
+- API 29+ 通过 `MediaStore.Files`、`RELATIVE_PATH` 和 `IS_PENDING` 创建并发布原生 UTF-16LE TSV；清除数据或卸载后公共文件保留。
+- 新增“导入本地备份”，列出当前安装可访问的固定目录备份并复用原生 `UserDictImportTask`。
+- 新增显式 `ACTION_VIEW` / `ACTION_SEND text/plain` 导入 Activity；卸载重装后可在 File Geek 中打开或分享旧备份到 Google 拼音，由用户确认后导入。
+- 测试阶段保留旧“导入用户字典/导出用户字典”；验证完成后再以固定路径入口替换重复旧入口。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat45-fixed-documents-backup`。
+- 独立测试包名：`com.google.android.inputmethod.pinyin.localbackupaudit`。
+
 ## [0.38.0] - 2026-07-24
 
 对应 Compatibility v44 / versionCode `4520357`，修复 V43 本地目录选择器无法从左侧位置列表进入内部存储的问题。

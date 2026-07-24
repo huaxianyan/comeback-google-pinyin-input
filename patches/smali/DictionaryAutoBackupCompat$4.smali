@@ -8,7 +8,7 @@
 
 # annotations
 .annotation system Ldalvik/annotation/EnclosingMethod;
-    value = Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->validateTreeAsync(Landroid/content/Context;Landroid/net/Uri;Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$ValidationCallback;)V
+    value = Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->finishSuccess(Landroid/content/Context;Z)V
 .end annotation
 
 .annotation system Ldalvik/annotation/InnerClass;
@@ -18,23 +18,19 @@
 
 
 # instance fields
-.field final synthetic val$callback:Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$ValidationCallback;
+.field final synthetic val$c:Landroid/content/Context;
 
-.field final synthetic val$context:Landroid/content/Context;
-
-.field final synthetic val$tree:Landroid/net/Uri;
+.field final synthetic val$force:Z
 
 
 # direct methods
-.method constructor <init>(Landroid/content/Context;Landroid/net/Uri;Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$ValidationCallback;)V
-    .registers 4
+.method constructor <init>(ZLandroid/content/Context;)V
+    .registers 3
 
-    .line 380
-    iput-object p1, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$4;->val$context:Landroid/content/Context;
+    .line 260
+    iput-boolean p1, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$4;->val$force:Z
 
-    iput-object p2, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$4;->val$tree:Landroid/net/Uri;
-
-    iput-object p3, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$4;->val$callback:Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$ValidationCallback;
+    iput-object p2, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$4;->val$c:Landroid/content/Context;
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
@@ -44,30 +40,24 @@
 
 # virtual methods
 .method public run()V
-    .registers 4
+    .registers 3
 
-    .line 382
-    iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$4;->val$context:Landroid/content/Context;
+    .line 261
+    invoke-static {}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupSettingsCompat;->refreshAll()V
 
-    iget-object v1, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$4;->val$tree:Landroid/net/Uri;
+    .line 262
+    iget-boolean v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$4;->val$force:Z
 
-    # invokes: Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->validateTree(Landroid/content/Context;Landroid/net/Uri;)Ljava/lang/String;
-    invoke-static {v0, v1}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->access$1200(Landroid/content/Context;Landroid/net/Uri;)Ljava/lang/String;
+    if-eqz v0, :cond_e
 
-    move-result-object v0
+    iget-object v0, p0, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$4;->val$c:Landroid/content/Context;
 
-    .line 383
-    # getter for: Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->MAIN:Landroid/os/Handler;
-    invoke-static {}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->access$1300()Landroid/os/Handler;
+    const-string v1, "\u672c\u5730\u7528\u6237\u8bcd\u5178\u5907\u4efd\u6210\u529f"
 
-    move-result-object v1
+    # invokes: Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->toast(Landroid/content/Context;Ljava/lang/String;)V
+    invoke-static {v0, v1}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat;->access$600(Landroid/content/Context;Ljava/lang/String;)V
 
-    new-instance v2, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$4$1;
-
-    invoke-direct {v2, p0, v0}, Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$4$1;-><init>(Lcom/google/android/inputmethod/pinyin/DictionaryAutoBackupCompat$4;Ljava/lang/String;)V
-
-    invoke-virtual {v1, v2}, Landroid/os/Handler;->post(Ljava/lang/Runnable;)Z
-
-    .line 388
+    .line 263
+    :cond_e
     return-void
 .end method

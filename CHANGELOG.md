@@ -15,7 +15,7 @@
 ### Build
 
 - versionName：`4.5.2.193126728-arm64-v8a-a16compat39-guided-first-run`。
-- APK 已成功重建，通过 zipalign 与 v1/v2/v3 签名校验；设备在覆盖安装前断开 ADB，因此尚未安装和打开 V39。
+- APK 已成功重建，通过 zipalign 与 v1/v2/v3 签名校验，并覆盖安装独立的 `com.google.android.inputmethod.pinyin.guideaudit` 测试包；已清除该测试包数据并打开引导入口，未执行功能或视觉测试。
 
 ## [0.32.0] - 2026-07-23
 

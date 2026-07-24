@@ -46,8 +46,8 @@ def apply(decoded: Path, application_id: str) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520353\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat40-footer-finish",
+        "versionInfo:\n  versionCode: 4520354\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat41-dictionary-recovery",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -854,6 +854,124 @@ def apply(decoded: Path, application_id: str) -> None:
         "    :cond_9",
     )
 
+    # Serialize scheduled and lifecycle-forced saves so separate task instances
+    # cannot rotate the same main/_bak/_tmp paths concurrently. Current Gboard
+    # likewise uses one class-wide monitor around its save runnable.
+    save_dictionary_task = decoded / (
+        "smali/com/google/android/apps/inputmethod/libs/hmm/SaveDictionaryTask.smali"
+    )
+    replace_once(
+        save_dictionary_task,
+        ".field public static sRunningTasks:Ljava/util/Set;\n"
+        "    .annotation system Ldalvik/annotation/Signature;\n"
+        "        value = {\n"
+        "            \"Ljava/util/Set\",\n"
+        "            \"<\",\n"
+        "            \"Lcom/google/android/apps/inputmethod/libs/hmm/AbstractHmmEngineFactory;\",\n"
+        "            \">;\"\n"
+        "        }\n"
+        "    .end annotation\n"
+        ".end field",
+        ".field public static sRunningTasks:Ljava/util/Set;\n"
+        "    .annotation system Ldalvik/annotation/Signature;\n"
+        "        value = {\n"
+        "            \"Ljava/util/Set\",\n"
+        "            \"<\",\n"
+        "            \"Lcom/google/android/apps/inputmethod/libs/hmm/AbstractHmmEngineFactory;\",\n"
+        "            \">;\"\n"
+        "        }\n"
+        "    .end annotation\n"
+        ".end field\n\n"
+        ".field private static final sSaveLock:Ljava/lang/Object;",
+    )
+    replace_once(
+        save_dictionary_task,
+        "    sput-object v0, Lcom/google/android/apps/inputmethod/libs/hmm/SaveDictionaryTask;->sRunningTasks:Ljava/util/Set;\n\n"
+        "    .line 49",
+        "    sput-object v0, Lcom/google/android/apps/inputmethod/libs/hmm/SaveDictionaryTask;->sRunningTasks:Ljava/util/Set;\n\n"
+        "    new-instance v0, Ljava/lang/Object;\n\n"
+        "    invoke-direct {v0}, Ljava/lang/Object;-><init>()V\n\n"
+        "    sput-object v0, Lcom/google/android/apps/inputmethod/libs/hmm/SaveDictionaryTask;->sSaveLock:Ljava/lang/Object;\n\n"
+        "    .line 49",
+    )
+    replace_once(
+        save_dictionary_task,
+        ".method saveDictionaries()V\n"
+        "    .locals 4\n\n"
+        "    .prologue\n"
+        "    .line 7",
+        ".method saveDictionaries()V\n"
+        "    .locals 5\n\n"
+        "    .prologue\n"
+        "    sget-object v4, Lcom/google/android/apps/inputmethod/libs/hmm/SaveDictionaryTask;->sSaveLock:Ljava/lang/Object;\n\n"
+        "    monitor-enter v4\n\n"
+        "    :try_start_save\n"
+        "    .line 7",
+    )
+    replace_once(
+        save_dictionary_task,
+        "    invoke-virtual {v0, v1, v2, v3}, Lamx;->a(Ljava/lang/String;J)V\n\n"
+        "    .line 14\n"
+        "    return-void\n"
+        ".end method",
+        "    invoke-virtual {v0, v1, v2, v3}, Lamx;->a(Ljava/lang/String;J)V\n"
+        "    :try_end_save\n"
+        "    .catchall {:try_start_save .. :try_end_save} :catchall_save\n\n"
+        "    monitor-exit v4\n\n"
+        "    .line 14\n"
+        "    return-void\n\n"
+        "    :catchall_save\n"
+        "    move-exception v0\n\n"
+        "    monitor-exit v4\n\n"
+        "    throw v0\n"
+        ".end method",
+    )
+
+    # Retained rolling backups must not resurrect data after an intentional
+    # dictionary deletion. Purge sidecars only when main was deleted or is
+    # already absent; preserve them if deletion itself failed.
+    replace_once(
+        engine_factory,
+        "    invoke-virtual {v1}, Ljava/io/File;->delete()Z\n\n"
+        "    move-result v1\n\n"
+        "    .line 358\n"
+        "    sget-boolean v2, Laik;->b:Z",
+        "    move-object v3, v1\n\n"
+        "    invoke-virtual {v3}, Ljava/io/File;->delete()Z\n\n"
+        "    move-result v1\n\n"
+        "    if-nez v1, :purge_deleted_dictionary_sidecars\n\n"
+        "    invoke-virtual {v3}, Ljava/io/File;->exists()Z\n\n"
+        "    move-result v2\n\n"
+        "    if-nez v2, :skip_deleted_dictionary_sidecars\n\n"
+        "    :purge_deleted_dictionary_sidecars\n"
+        "    invoke-virtual {p0, v0}, Lcom/google/android/apps/inputmethod/libs/hmm/AbstractHmmEngineFactory;->getMutableDictionaryFileName(Lcom/google/android/apps/inputmethod/libs/hmm/AbstractHmmEngineFactory$MutableDictionaryType;)Ljava/lang/String;\n\n"
+        "    move-result-object v2\n\n"
+        "    invoke-static {p1, v2}, Lcom/google/android/inputmethod/pinyin/DictionaryRecoveryCompat;->purgeSidecars(Landroid/content/Context;Ljava/lang/String;)V\n\n"
+        "    :skip_deleted_dictionary_sidecars\n"
+        "    .line 358\n"
+        "    sget-boolean v2, Laik;->b:Z",
+    )
+
+    # A user-requested clear is destructive: once the empty dictionary has
+    # persisted successfully, remove the previous non-empty rolling copy and
+    # any stale recovery artifacts.
+    user_dict_clear_task = decoded / (
+        "smali/com/google/android/apps/inputmethod/libs/hmm/sync/UserDictClearTask.smali"
+    )
+    replace_once(
+        user_dict_clear_task,
+        "    if-eqz v7, :cond_1\n\n"
+        "    .line 28\n"
+        "    sget-object v7, Lcom/google/android/apps/inputmethod/libs/hmm/AbstractHmmEngineFactory$MutableDictionaryType;->USER_DICTIONARY:Lcom/google/android/apps/inputmethod/libs/hmm/AbstractHmmEngineFactory$MutableDictionaryType;",
+        "    if-eqz v7, :cond_1\n\n"
+        "    iget-object v7, p0, Lcom/google/android/apps/inputmethod/libs/hmm/sync/UserDictClearTask;->mContext:Landroid/content/Context;\n\n"
+        "    invoke-virtual {v4, v8}, Lcom/google/android/apps/inputmethod/libs/hmm/AbstractHmmEngineFactory;->getMutableDictionaryFileName(Lcom/google/android/apps/inputmethod/libs/hmm/AbstractHmmEngineFactory$MutableDictionaryType;)Ljava/lang/String;\n\n"
+        "    move-result-object v9\n\n"
+        "    invoke-static {v7, v9}, Lcom/google/android/inputmethod/pinyin/DictionaryRecoveryCompat;->purgeSidecars(Landroid/content/Context;Ljava/lang/String;)V\n\n"
+        "    .line 28\n"
+        "    sget-object v7, Lcom/google/android/apps/inputmethod/libs/hmm/AbstractHmmEngineFactory$MutableDictionaryType;->USER_DICTIONARY:Lcom/google/android/apps/inputmethod/libs/hmm/AbstractHmmEngineFactory$MutableDictionaryType;",
+    )
+
     # Use a distinct application ID so the compatibility build can coexist
     # with the official Google-signed package for side-by-side comparison.
     manifest = decoded / "AndroidManifest.xml"
@@ -1145,7 +1263,7 @@ def apply(decoded: Path, application_id: str) -> None:
         raise RuntimeError(f"Refusing to overwrite existing helper: {candidate_dst}")
     shutil.copyfile(candidate_src, candidate_dst)
 
-    print(f"Applied compatibility v40 footer Finish patches to {decoded} ({application_id})")
+    print(f"Applied compatibility v41 dictionary recovery patches to {decoded} ({application_id})")
 
 
 def main() -> None:

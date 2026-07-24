@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.35.0] - 2026-07-24
+
+对应 Compatibility v41 / versionCode `4520354`，在独立 dictionaryaudit 包中复核可变词库的滚动保存与故障恢复。
+
+### Changed
+
+- 对照当前 Gboard 的 `DictionaryAccessor`、enrollment 和 `SaveDictionaryTask`，记录完整故障矩阵及真机词库快照结果。
+- 原生加载主文件及 `_bak` 都失败时，继续尝试仍存在的 `_tmp`；每个候选只消费一次，重试路径保持有界。
+- 为旧 `SaveDictionaryTask.saveDictionaries()` 增加进程内共享锁，避免不同任务实例中的定时异步保存与生命周期强制保存同时轮换相同的主文件、`_bak` 和 `_tmp`。
+- 用户明确关闭某个可变词库，且主文件已删除或本来就不存在时，同时清除 `_bak`、`_tmp` 和 `_unreadable`，避免以后重新启用时恢复已删除数据。
+- “清除用户字典”成功持久化空词库后，清除旧滚动备份和故障副本，确保破坏性操作覆盖所有恢复副本；普通学习、编辑和定时保存仍保留滚动备份。
+
+### Build
+
+- versionName：`4.5.2.193126728-arm64-v8a-a16compat41-dictionary-recovery`。
+- 新增研究记录：`docs/gboard-dictionary-recovery-research.md`。
+- APK 已成功重建，通过 zipalign 与 v1/v2/v3 签名校验，并安装为独立的 `com.google.android.inputmethod.pinyin.dictionaryaudit` 审计包；未覆盖当前兼容包，也未执行输入功能或视觉测试。
+
 ## [0.34.0] - 2026-07-24
 
 对应 Compatibility v40 / versionCode `4520353`，继续使用独立 guideaudit 包验证统一的 footer 操作。

@@ -38,16 +38,24 @@
 
     add-int/lit8 v1, v1, -0x1
 
-    if-ge p1, v1, :hide_next
+    if-ne p1, v1, :show_next
+
+    const-string v2, "完成"
+
+    goto :set_next_text
+
+    :show_next
+    const-string v2, "下一步"
+
+    :set_next_text
+    move-object v3, v0
+
+    check-cast v3, Landroid/widget/TextView;
+
+    invoke-virtual {v3, v2}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
 
     const/4 v1, 0x0
 
-    goto :set_next_visibility
-
-    :hide_next
-    const/4 v1, 0x4
-
-    :set_next_visibility
     invoke-virtual {v0, v1}, Landroid/view/View;->setVisibility(I)V
 
     instance-of v1, p2, Lapr;

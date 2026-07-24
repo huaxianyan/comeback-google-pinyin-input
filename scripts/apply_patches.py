@@ -46,8 +46,8 @@ def apply(decoded: Path, application_id: str) -> None:
     replace_once(
         decoded / "apktool.yml",
         "versionInfo:\n  versionCode: 4520313\n  versionName: 4.5.2.193126728-arm64-v8a",
-        "versionInfo:\n  versionCode: 4520352\n"
-        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat39-guided-first-run",
+        "versionInfo:\n  versionCode: 4520353\n"
+        "  versionName: 4.5.2.193126728-arm64-v8a-a16compat40-footer-finish",
     )
 
     arrays = decoded / "res/values/arrays.xml"
@@ -334,8 +334,39 @@ def apply(decoded: Path, application_id: str) -> None:
         ".end method",
     )
 
-    # Page selection owns footer visibility and initial Next enabled state. Run
-    # this after the old generic footer logic so first/last-page rules win.
+    # On the last first-run page the right-side Next slot becomes Finish and
+    # exits through the already validated Home/task cleanup path.
+    next_listener = decoded / "smali/aqa.smali"
+    replace_once(
+        next_listener,
+        "    invoke-virtual {v0}, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "keyboard/widget/BidiViewPager;->a()I\n\n"
+        "    move-result v1\n\n"
+        "    .line 5\n"
+        "    iget-object v0, p0, Laqa;->a:Lapy;",
+        "    invoke-virtual {v0}, Lcom/google/android/apps/inputmethod/libs/framework/"
+        "keyboard/widget/BidiViewPager;->a()I\n\n"
+        "    move-result v1\n\n"
+        "    iget-object v0, p0, Laqa;->a:Lapy;\n\n"
+        "    instance-of v2, v0, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
+        "PinyinFirstRunActivity;\n\n"
+        "    if-eqz v2, :continue_next\n\n"
+        "    iget-object v2, v0, Lapy;->a:[I\n\n"
+        "    array-length v2, v2\n\n"
+        "    add-int/lit8 v2, v2, -0x1\n\n"
+        "    if-ne v1, v2, :continue_next\n\n"
+        "    check-cast v0, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
+        "PinyinFirstRunActivity;\n\n"
+        "    invoke-virtual {v0}, Lcom/google/android/apps/inputmethod/pinyin/firstrun/"
+        "PinyinFirstRunActivity;->exitGuide()V\n\n"
+        "    return-void\n\n"
+        "    :continue_next\n"
+        "    .line 5\n"
+        "    iget-object v0, p0, Laqa;->a:Lapy;",
+    )
+
+    # Page selection owns footer visibility, Next/Finish text and initial enabled
+    # state. Run this after old generic footer logic so first/last rules win.
     page_adapter = decoded / "smali/aqc.smali"
     replace_once(
         page_adapter,
@@ -1114,7 +1145,7 @@ def apply(decoded: Path, application_id: str) -> None:
         raise RuntimeError(f"Refusing to overwrite existing helper: {candidate_dst}")
     shutil.copyfile(candidate_src, candidate_dst)
 
-    print(f"Applied compatibility v39 guided first-run patches to {decoded} ({application_id})")
+    print(f"Applied compatibility v40 footer Finish patches to {decoded} ({application_id})")
 
 
 def main() -> None:
